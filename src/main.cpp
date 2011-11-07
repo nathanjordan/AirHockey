@@ -6,6 +6,7 @@
  */
 
 #include <vector>
+#include <fstream>
 
 //OpenGL
 #include <GL/glew.h>
@@ -45,6 +46,11 @@ GLuint rotationLocation;
 GLuint scaleLocation;
 GLuint colorLocation;
 GLuint vertexLocation;
+
+Object* puck;
+Object* paddle1;
+Object* paddle2;
+Object* table;
 
 std::vector<Object*> objectList;
 
@@ -276,3 +282,44 @@ void specialHandler( int key , int x , int y ) {
 
 	}
 
+void readVertices( char* filename , Object* object ) {
+
+	std::ifstream fin;
+
+	fin.open( filename );
+
+	if(!fin.good())
+		exit(1);
+
+	int numVerts;
+
+	fin >> numVerts;
+
+	TVec4<GLfloat>* tempVerts = new TVec4<GLfloat>[numVerts];
+	TVec4<GLfloat>* tempColors = new TVec4<GLfloat>[numVerts];
+
+	int i = 0 ;
+
+	while( !fin.eof() ) {
+
+		fin >> tempVerts[i][0];
+
+		fin >> tempVerts[i][1];
+
+		fin >> tempVerts[i][2];
+
+		tempVerts[i][3] = 1.0;
+
+		tempColors[i] = TVec4<GLfloat>(1.0,1.0,1.0,1.0);
+
+		i++;
+
+		}
+
+	Object* tempObject = new Object();
+
+	tempObject->setVertices( numVerts , tempVerts );
+
+	tempObject->setColors( numVerts , tempColors );
+
+	}
