@@ -6,6 +6,7 @@
  */
 
 #include "Object.h"
+#include <limits>
 
 Object::Object( ) {
 	
@@ -133,6 +134,34 @@ void Object::setVertices( int numVerts , TVec4<GLfloat>* verts ) {
 
 			}
 		}
+
+	float minX = vertices[0][0], minY = vertices[0][1], minZ = vertices[0][2], maxX = vertices[0][0], maxY = vertices[0][1], maxZ = vertices[0][2];
+
+	for( int i = 0 ; i < numVerts ; i++ ) {
+
+		if(vertices[i][0] < minX)
+			minX = vertices[i][0];
+
+		if(vertices[i][1] < minY)
+			minY = vertices[i][1];
+
+		if(vertices[i][2] < minZ)
+			minZ = vertices[i][2];
+
+		if(vertices[i][0] > maxX)
+			maxX = vertices[i][0];
+
+		if(vertices[i][1] > maxY)
+			maxY = vertices[i][1];
+
+		if(vertices[i][2] > maxZ)
+			maxZ = vertices[i][2];
+
+		}
+
+	width = maxX - minX;
+	height = maxY - minY;
+	depth = maxZ - minZ;
 
 	}
 
