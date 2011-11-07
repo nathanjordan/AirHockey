@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <fstream>
+#include <math.h>
 
 //OpenGL
 #include <GL/glew.h>
@@ -26,6 +27,10 @@ void initWindow();
 
 void initShaders();
 
+void initObjects();
+
+void initView();
+
 void mouseMoveHandler(int x, int y);
 
 void mouseButtonHandler( int button, int state, int x, int y);
@@ -37,6 +42,8 @@ void displayCallback();
 void keyboardHandler(unsigned char key , int x , int y );
 
 void specialHandler( int key , int x , int y );
+
+TVec3<GLfloat>* crossProduct( TVec3<GLfloat>* a, TVec3<GLfloat>* b);
 
 GLuint program;
 GLuint vertexShader;
@@ -52,6 +59,7 @@ Object* paddle2;
 Object* table;
 
 Mat4 viewMatrix;
+Mat4 projMatrix;
 
 std::vector<Object*> objectList;
 
@@ -320,5 +328,61 @@ void readVertices( char* filename , Object* object ) {
 	tempObject->setVertices( numVerts , tempVerts );
 
 	tempObject->setColors( numVerts , tempColors );
+
+	}
+
+void initObjects() {
+
+	readVertices( (char*) "/home/njordan/Downloads/workspace/Air Hockey/src/vertices/table.verts" , table );
+
+	readVertices( (char*) "/home/njordan/Downloads/workspace/Air Hockey/src/vertices/puck.verts" , puck );
+
+	readVertices( (char*) "/home/njordan/Downloads/workspace/Air Hockey/src/vertices/paddle.verts" , paddle1 );
+
+	readVertices( (char*) "/home/njordan/Downloads/workspace/Air Hockey/src/vertices/paddle.verts" , paddle2 );
+
+	objectList.push_back( table );
+
+	objectList.push_back( puck );
+
+	objectList.push_back( paddle1 );
+
+	objectList.push_back( paddle2 );
+
+	}
+
+void initView() {
+
+	viewMatrix = viewMatrix.I();
+
+	TVec3<GLfloat> F = TVec3<GLfloat>( 0.0 , 50.0 , -10.0 );
+
+	float mag = sqrt( pow(F[0],2) + pow(F[1],2) + pow(F[2],2) );
+
+	TVec3<GLfloat> f = TVec3<GLfloat>( F[0]/mag , F[1]/mag , F[2]/mag );
+
+	TVec3<GLfloat> up = TVec3<GLfloat>( 0.0 , 1.0 , 0.0 );
+
+	TVec3<GLfloat> s = cross( f , up );
+
+	TVec3<GLfloat> u = cross( s , f );
+
+	viewMatrix[0][0] = s[0];
+
+	viewMatrix[0][1] = s[1];
+
+	viewMatrix[0][2] = s[2];
+
+	viewMatrix[1][2] = u[0];
+
+	viewMatrix[1][2] = u[1];
+
+	viewMatrix[1][2] = u[2];
+
+	viewMatrix[2][2] = f[0];
+
+	viewMatrix[2][2] = f[1];
+
+	viewMatrix[2][2] = f[2];
 
 	}
