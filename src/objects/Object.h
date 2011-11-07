@@ -27,7 +27,7 @@ public:
 	Object( );
 	virtual ~Object();
 	Object& operator=( Object& right );
-	void draw( GLuint translationLocation, GLuint rotationLocation, GLuint scaleLocation, GLuint vertexLocation, GLuint colorLocation);
+	void draw( GLuint modelLocation, GLuint viewLocation, GLuint vertexLocation, GLuint colorLocation , Mat4*);
 	void setVertices( int , TVec4<GLfloat>* );
 	void setColors( int , TVec4<GLfloat>* );
 	void rotate( float );
@@ -35,6 +35,7 @@ public:
 	Mat4 matTranslation;
 	Mat4 matRotation;
 	Mat4 matScale;
+	Mat4 matModel;
 	TVec4<GLfloat>* vertices;
 	TVec4<GLfloat>* colors;
 	GLfloat height, width, depth;

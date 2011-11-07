@@ -41,9 +41,8 @@ void specialHandler( int key , int x , int y );
 GLuint program;
 GLuint vertexShader;
 GLuint fragmentShader;
-GLuint translationLocation;
-GLuint rotationLocation;
-GLuint scaleLocation;
+GLuint modelLocation;
+GLuint viewLocation;
 GLuint colorLocation;
 GLuint vertexLocation;
 
@@ -51,6 +50,8 @@ Object* puck;
 Object* paddle1;
 Object* paddle2;
 Object* table;
+
+Mat4 viewMatrix;
 
 std::vector<Object*> objectList;
 
@@ -191,15 +192,13 @@ void initShaders() {
 
 	glUseProgram( program );
 
-	translationLocation = glGetUniformLocation( program , "translation" );
+	modelLocation = glGetUniformLocation( program , "model" );
 
-	vertexLocation = glGetAttribLocation( program , "vPosition" );
+	viewLocation = glGetUniformLocation( program , "view" );
 
-	colorLocation = glGetAttribLocation( program , "in_Color" );
+	vertexLocation = glGetAttribLocation( program , "vertex" );
 
-	rotationLocation = glGetUniformLocation( program , "rotation" );
-
-	scaleLocation = glGetUniformLocation( program , "scale" );
+	colorLocation = glGetAttribLocation( program , "color" );
 
 	}
 
@@ -266,7 +265,7 @@ void displayCallback() {
 	//draw all the shapes
 	for( unsigned int i = 0 ; i < objectList.size() ; i++ ) {
 
-		objectList[i]->draw( translationLocation, rotationLocation, scaleLocation, vertexLocation, colorLocation );
+		objectList[i]->draw( modelLocation , viewLocation, vertexLocation, colorLocation , &viewMatrix );
 
 		}
 

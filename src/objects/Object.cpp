@@ -50,7 +50,7 @@ Object& Object::operator=( Object& right ) {
 
 	}
 
-void Object::draw( GLuint translationLocation, GLuint rotationLocation, GLuint scaleLocation, GLuint vertexLocation, GLuint colorLocation) {
+void Object::draw( GLuint modelLocation, GLuint viewLocation, GLuint vertexLocation, GLuint colorLocation , Mat4* viewMatrix) {
 
 	GLfloat* tempVertices = new GLfloat[ numVertices * 4];
 
@@ -104,11 +104,9 @@ void Object::draw( GLuint translationLocation, GLuint rotationLocation, GLuint s
 	// Enable attribute index 1 as being used
 	glEnableVertexAttribArray( colorLocation );
 
-	glUniformMatrix4fv( translationLocation , 1 , true , matTranslation );
+	glUniformMatrix4fv( modelLocation , 1 , true , matModel );
 
-	glUniformMatrix4fv( rotationLocation, 1 , true , matRotation );
-
-	glUniformMatrix4fv( scaleLocation , 1 , true , matScale );
+	glUniformMatrix4fv( viewLocation, 1 , true , *viewMatrix );
 
 	glDrawArrays( GL_POLYGON , 0 , numVertices );
 
