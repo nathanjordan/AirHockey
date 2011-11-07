@@ -50,6 +50,7 @@ GLuint vertexShader;
 GLuint fragmentShader;
 GLuint modelLocation;
 GLuint viewLocation;
+GLuint projectionLocation;
 GLuint colorLocation;
 GLuint vertexLocation;
 
@@ -68,6 +69,10 @@ int main() {
 	initWindow();
 
 	initShaders();
+
+	initView();
+
+	initObjects();
 
 	glutMainLoop();
 
@@ -204,6 +209,8 @@ void initShaders() {
 
 	viewLocation = glGetUniformLocation( program , "view" );
 
+	projectionLocation = glGetUniformLocation( program , "projection" );
+
 	vertexLocation = glGetAttribLocation( program , "vertex" );
 
 	colorLocation = glGetAttribLocation( program , "color" );
@@ -273,7 +280,7 @@ void displayCallback() {
 	//draw all the shapes
 	for( unsigned int i = 0 ; i < objectList.size() ; i++ ) {
 
-		objectList[i]->draw( modelLocation , viewLocation, vertexLocation, colorLocation , &viewMatrix );
+		objectList[i]->draw( modelLocation , viewLocation, projectionLocation, vertexLocation, colorLocation , &viewMatrix , &projMatrix );
 
 		}
 
@@ -353,6 +360,7 @@ void initObjects() {
 
 void initView() {
 
+	//View Matrix
 	viewMatrix = viewMatrix.I();
 
 	TVec3<GLfloat> F = TVec3<GLfloat>( 0.0 , 50.0 , -10.0 );
@@ -384,5 +392,10 @@ void initView() {
 	viewMatrix[2][2] = f[1];
 
 	viewMatrix[2][2] = f[2];
+
+
+	//Projection Matrix (Ortho3D)
+
+	projMatrix = projMatrix.I();
 
 	}

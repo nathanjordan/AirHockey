@@ -24,10 +24,10 @@ class Object {
 
 public:
 
-	Object( );
+	Object();
 	virtual ~Object();
 	Object& operator=( Object& right );
-	void draw( GLuint modelLocation, GLuint viewLocation, GLuint vertexLocation, GLuint colorLocation , Mat4*);
+	void draw( GLuint modelLocation, GLuint viewLocation, GLuint, GLuint vertexLocation, GLuint colorLocation , Mat4* , Mat4*);
 	void setVertices( int , TVec4<GLfloat>* );
 	void setColors( int , TVec4<GLfloat>* );
 	void rotate( float );

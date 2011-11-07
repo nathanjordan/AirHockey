@@ -20,6 +20,14 @@ Object::Object( ) {
 
 	vertices = 0;
 
+	matTranslation = matTranslation.I();
+
+	matRotation = matRotation.I();
+
+	matScale = matScale.I();
+
+	matModel = matTranslation * matScale * matRotation;
+
 	}
 
 Object::~Object() {
@@ -50,7 +58,7 @@ Object& Object::operator=( Object& right ) {
 
 	}
 
-void Object::draw( GLuint modelLocation, GLuint viewLocation, GLuint vertexLocation, GLuint colorLocation , Mat4* viewMatrix) {
+void Object::draw( GLuint modelLocation, GLuint viewLocation, GLuint projectionLocation, GLuint vertexLocation, GLuint colorLocation , Mat4* viewMatrix, Mat4* projMatrix) {
 
 	GLfloat* tempVertices = new GLfloat[ numVertices * 4];
 
@@ -75,6 +83,8 @@ void Object::draw( GLuint modelLocation, GLuint viewLocation, GLuint vertexLocat
 			}
 
 		}
+
+	matModel = matTranslation * matScale * matRotation;
 
 	glBindVertexArray( vao );
 
@@ -107,6 +117,8 @@ void Object::draw( GLuint modelLocation, GLuint viewLocation, GLuint vertexLocat
 	glUniformMatrix4fv( modelLocation , 1 , true , matModel );
 
 	glUniformMatrix4fv( viewLocation, 1 , true , *viewMatrix );
+
+	glUniformMatrix4fv( projectionLocation, 1 , true , *projMatrix );
 
 	glDrawArrays( GL_POLYGON , 0 , numVertices );
 
