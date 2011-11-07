@@ -50,13 +50,9 @@ std::vector<Object*> objectList;
 
 int main() {
 
-	std::cout << "fack";
-
 	initWindow();
 
 	initShaders();
-
-	std::cout << "fack";
 
 	glutMainLoop();
 
