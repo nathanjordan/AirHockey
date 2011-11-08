@@ -45,6 +45,8 @@ void specialHandler( int key , int x , int y );
 
 TVec3<GLfloat>* crossProduct( TVec3<GLfloat>* a, TVec3<GLfloat>* b);
 
+void updateViewMatrix();
+
 GLuint program;
 GLuint vertexShader;
 GLuint fragmentShader;
@@ -61,6 +63,8 @@ Object* table;
 
 Mat4 viewMatrix;
 Mat4 projMatrix;
+
+float currentAngle = 0;
 
 std::vector<Object*> objectList;
 
@@ -215,16 +219,31 @@ void initShaders() {
 
 	colorLocation = glGetAttribLocation( program , "color" );
 
+	glEnable(GL_LIGHTING);
+
+	glEnable(GL_LIGHT0);
+
+	GLfloat ambient[4] = { 0.4 , 0.4 , 0.4 , 1.0 };
+	GLfloat diffuse[4] = { 0.7 , 0.4 , 0.4 , 1.0 };
+	GLfloat specular[4] = { 1.0 , 0.8 , 0.8 , 1.0 };
+	GLfloat pos[4] = { 6.0 , 6.0 , 6.0 , 1.0 };
+
+	glLightfv(GL_LIGHT0, GL_AMBIENT, ambient );
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse );
+	glLightfv(GL_LIGHT0, GL_SPECULAR, specular );
+	glLightfv(GL_LIGHT0, GL_POSITION, pos );
+
 	}
 
 void initWindow() {
 
 	char** none = new char*[0];
+
 	int noneCount = 0;
 
 	glutInit(&noneCount,none);
 
-	glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGBA );
+	glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH );
 
 	glutInitWindowSize(640,480);
 
@@ -244,7 +263,7 @@ void initWindow() {
 
 	glewInit();
 
-	glOrtho(0.0,500.0,500.0,0.0,-1.0,1.0);
+	//glOrtho(0.0,500.0,500.0,0.0,-1.0,1.0);
 
 	glutKeyboardFunc( keyboardHandler );
 
@@ -291,6 +310,22 @@ void displayCallback() {
 
 void keyboardHandler(unsigned char key , int x , int y ) {
 
+	if( key == '[' ) {
+
+		currentAngle += 0.1;
+
+		updateViewMatrix();
+
+		}
+
+	else if (key == ']') {
+
+		currentAngle -= 0.1;
+
+		updateViewMatrix();
+
+		}
+
 	}
 void specialHandler( int key , int x , int y ) {
 
@@ -314,6 +349,8 @@ void readVertices( char* filename , Object* object ) {
 
 	int i = 0 ;
 
+	float stupid;
+
 	while( !fin.eof() ) {
 
 		fin >> tempVerts[i][0];
@@ -321,6 +358,8 @@ void readVertices( char* filename , Object* object ) {
 		fin >> tempVerts[i][1];
 
 		fin >> tempVerts[i][2];
+
+		fin >> stupid >> stupid >> stupid;
 
 		tempVerts[i][3] = 1.0;
 
@@ -362,15 +401,23 @@ void initObjects() {
 
 	objectList.push_back( puck );
 
-	objectList.push_back( paddle1 );
+	//objectList.push_back( paddle1 );
 
-	objectList.push_back( paddle2 );
+	//objectList.push_back( paddle2 );
 
-	table->matScale[0][0] = 60.0;
+	table->matScale[0][0] = 20.0;
 
-	table->matScale[1][1] = 60.0;
+	table->matScale[1][1] = 20.0;
 
-	table->matScale[2][2] = 60.0;
+	table->matScale[2][2] = 20.0;
+
+	table->matTranslation[0][3] = 50.0;
+
+	puck->matScale[0][0] = 50.0;
+
+	puck->matScale[1][1] = 50.0;
+
+	puck->matScale[2][2] = 5.0;
 
 	}
 
@@ -414,10 +461,50 @@ void initView() {
 
 	projMatrix = projMatrix.I();
 
-	projMatrix[0][0] = 2.0 / 640.0;
+	projMatrix[0][0] = 2.0 / 480.0;
 
-	projMatrix[1][1] = 2.0 / 480.0;
+	projMatrix[1][1] = 2.0 / 640.0;
 
 	projMatrix[2][2] = -2.0 / 1024.0;
+
+	}
+
+void updateViewMatrix() {
+
+	//View Matrix
+	viewMatrix = viewMatrix.I();
+
+	float x = cos( currentAngle ) * 15;
+	float y = sin( currentAngle ) * 15;
+
+	TVec3<GLfloat> F = TVec3<GLfloat>( - x , - y , - 10.0 );
+
+	float mag = sqrt( pow(F[0],2) + pow(F[1],2) + pow(F[2],2) );
+
+	TVec3<GLfloat> f = TVec3<GLfloat>( F[0]/mag , F[1]/mag , F[2]/mag );
+
+	TVec3<GLfloat> up = TVec3<GLfloat>( 0.0 , 1.0 , 0.0 );
+
+	TVec3<GLfloat> s = cross( f , up );
+
+	TVec3<GLfloat> u = cross( s , f );
+
+	viewMatrix[0][0] = s[0];
+
+	viewMatrix[0][1] = s[1];
+
+	viewMatrix[0][2] = s[2];
+
+	viewMatrix[1][2] = u[0];
+
+	viewMatrix[1][2] = u[1];
+
+	viewMatrix[1][2] = u[2];
+
+	viewMatrix[2][2] = f[0];
+
+	viewMatrix[2][2] = f[1];
+
+	viewMatrix[2][2] = f[2];
 
 	}
