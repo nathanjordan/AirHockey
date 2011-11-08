@@ -336,9 +336,19 @@ void readVertices( char* filename , Object* object ) {
 
 	tempObject->setColors( numVerts , tempColors );
 
+	*object = *tempObject;
+
 	}
 
 void initObjects() {
+
+	table = new Object();
+
+	puck = new Object();
+
+	paddle1 = new Object();
+
+	paddle2 = new Object();
 
 	readVertices( (char*) "/home/njordan/Downloads/workspace/Air Hockey/src/vertices/table.verts" , table );
 
@@ -356,6 +366,12 @@ void initObjects() {
 
 	objectList.push_back( paddle2 );
 
+	table->matScale[0][0] = 60.0;
+
+	table->matScale[1][1] = 60.0;
+
+	table->matScale[2][2] = 60.0;
+
 	}
 
 void initView() {
@@ -363,7 +379,7 @@ void initView() {
 	//View Matrix
 	viewMatrix = viewMatrix.I();
 
-	TVec3<GLfloat> F = TVec3<GLfloat>( 0.0 , 50.0 , -10.0 );
+	TVec3<GLfloat> F = TVec3<GLfloat>( -10.0 , -10.0 , -10.0 );
 
 	float mag = sqrt( pow(F[0],2) + pow(F[1],2) + pow(F[2],2) );
 
@@ -397,5 +413,11 @@ void initView() {
 	//Projection Matrix (Ortho3D)
 
 	projMatrix = projMatrix.I();
+
+	projMatrix[0][0] = 2.0 / 640.0;
+
+	projMatrix[1][1] = 2.0 / 480.0;
+
+	projMatrix[2][2] = -2.0 / 1024.0;
 
 	}
