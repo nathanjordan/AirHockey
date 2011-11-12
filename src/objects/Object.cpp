@@ -37,22 +37,24 @@ Object::~Object() {
 
 	}
 Object& Object::operator=( Object& right ) {
-
-	this->setVertices( right.numVertices , right.vertices );
-
-	this->setColors( right.numVertices , right.colors );
-
-	this->matTranslation = right.matTranslation;
-
-	this->matRotation = right.matRotation;
-
-	this->matScale = right.matScale;
-
-	this->height = right.height;
-
-	this->width = right.width;
-
-	this->depth = right.depth;
+    
+    if (this != &rhs) {
+        this->setVertices( right.numVertices , right.vertices );
+        
+        this->setColors( right.numVertices , right.colors );
+        
+        this->matTranslation = right.matTranslation;
+        
+        this->matRotation = right.matRotation;
+        
+        this->matScale = right.matScale;
+        
+        this->height = right.height;
+        
+        this->width = right.width;
+        
+        this->depth = right.depth;
+    }
 
 	return *this;
 

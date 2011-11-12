@@ -233,6 +233,12 @@ void initShaders() {
 	glLightfv(GL_LIGHT0, GL_SPECULAR, specular );
 	glLightfv(GL_LIGHT0, GL_POSITION, pos );
 
+    glEnable( GL_DEPTH_TEST );
+    
+    
+    //clear the background to black
+	glClearColor(0.0, 0.0 , 0.0 , 1.0 );
+    
 	}
 
 void initWindow() {
@@ -291,10 +297,9 @@ void timerTick( int value ) {
 
 void displayCallback() {
 
-	//clear the background to black
-	glClearColor(0.0, 0.0 , 0.0 , 1.0 );
+	
 
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	//draw all the shapes
 	for( unsigned int i = 0 ; i < objectList.size() ; i++ ) {
