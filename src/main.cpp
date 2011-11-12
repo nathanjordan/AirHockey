@@ -223,10 +223,10 @@ void initShaders() {
 
 	glEnable(GL_LIGHT0);
 
-	GLfloat ambient[4] = { 0.2 , 0.2 , 0.2 , 1.0 };
-	GLfloat diffuse[4] = { 1.0 , 1.0 , 1.0 , 1.0 };
-	GLfloat specular[4] = { 1.0 , 1.0 , 1.0 , 1.0 };
-	GLfloat pos[4] = { 0.0 , 0.0 , -1.0 , 0.0 };
+	GLfloat ambient[4] = { 0.4 , 0.4 , 0.4 , 1.0 };
+	GLfloat diffuse[4] = { 0.7 , 0.4 , 0.4 , 1.0 };
+	GLfloat specular[4] = { 1.0 , 0.8 , 0.8 , 1.0 };
+	GLfloat pos[4] = { 6.0 , 6.0 , 6.0 , 1.0 };
 
 	glLightfv(GL_LIGHT0, GL_AMBIENT, ambient );
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse );
