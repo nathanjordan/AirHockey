@@ -38,7 +38,7 @@ Object::~Object() {
 	}
 Object& Object::operator=( Object& right ) {
     
-    if (this != &rhs) {
+    if (this != &right) {
         this->setVertices( right.numVertices , right.vertices );
         
         this->setColors( right.numVertices , right.colors );
