@@ -39,6 +39,7 @@ Object::~Object() {
 Object& Object::operator=( Object& right ) {
     
     if (this != &right) {
+
         this->setVertices( right.numVertices , right.vertices );
         
         this->setColors( right.numVertices , right.colors );
@@ -54,7 +55,8 @@ Object& Object::operator=( Object& right ) {
         this->width = right.width;
         
         this->depth = right.depth;
-    }
+
+		}
 
 	return *this;
 
