@@ -20,6 +20,7 @@
 #include <AL/alut.h>
 
 #include "objects/Object.h"
+#include "kixor/objLoader.h"
 
 char* parseGLSL( char* file );
 
@@ -219,7 +220,9 @@ void initShaders() {
 
 	colorLocation = glGetAttribLocation( program , "color" );
 
-	glEnable(GL_LIGHTING);
+	glDisable(GL_LIGHTING);
+
+	/*glEnable(GL_LIGHTING);
 
 	glEnable(GL_LIGHT0);
 
@@ -232,12 +235,12 @@ void initShaders() {
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse );
 	glLightfv(GL_LIGHT0, GL_SPECULAR, specular );
 	glLightfv(GL_LIGHT0, GL_POSITION, pos );
-
+*/
     glEnable( GL_DEPTH_TEST );
     
     
     //clear the background to black
-	glClearColor(0.0, 0.0 , 0.0 , 1.0 );
+	glClearColor(1.0, 1.0 , 1.0 , 1.0 );
     
 	}
 
@@ -255,7 +258,7 @@ void initWindow() {
 
 	glutInitWindowPosition(0, 0);
 
-	glutCreateWindow("Sketchpad");
+	glutCreateWindow("Air Hockey");
 
 	glutDisplayFunc( displayCallback );
 
@@ -297,9 +300,7 @@ void timerTick( int value ) {
 
 void displayCallback() {
 
-	
-
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
 	//draw all the shapes
 	for( unsigned int i = 0 ; i < objectList.size() ; i++ ) {
@@ -338,49 +339,21 @@ void specialHandler( int key , int x , int y ) {
 
 void readVertices( char* filename , Object* object ) {
 
-	std::ifstream fin;
+	objLoader* loader = new objLoader();
 
-	fin.open( filename );
+	loader->load( filename );
 
-	if(!fin.good())
-		exit(1);
+	object = new Object();
 
-	int numVerts;
+	object->setFaces( loader->faceCount , loader->vertexCount , loader->faceList , loader->vertexList );
 
-	fin >> numVerts;
+	for( int i = 0 ; i < loader->vertexCount ; i++ ) {
 
-	TVec4<GLfloat>* tempVerts = new TVec4<GLfloat>[numVerts];
-	TVec4<GLfloat>* tempColors = new TVec4<GLfloat>[numVerts];
-
-	int i = 0 ;
-
-	float stupid;
-
-	while( !fin.eof() ) {
-
-		fin >> tempVerts[i][0];
-
-		fin >> tempVerts[i][1];
-
-		fin >> tempVerts[i][2];
-
-		fin >> stupid >> stupid >> stupid;
-
-		tempVerts[i][3] = 1.0;
-
-		tempColors[i] = TVec4<GLfloat>(1.0,1.0,1.0,1.0);
-
-		i++;
+		std::cout << loader->vertexList[i]->e[0] << " " << loader->vertexList[i]->e[1] << " " << loader->vertexList[i]->e[2] << " \n";
 
 		}
 
-	Object* tempObject = new Object();
-
-	tempObject->setVertices( numVerts , tempVerts );
-
-	tempObject->setColors( numVerts , tempColors );
-
-	*object = *tempObject;
+	//object->loader = loader;
 
 	}
 
@@ -394,29 +367,31 @@ void initObjects() {
 
 	paddle2 = new Object();
 
-	readVertices( (char*) "/home/njordan/Downloads/workspace/Air Hockey/src/vertices/table.verts" , table );
+	readVertices( (char*) "/home/njordan/Desktop/test.obj" , table );
 
-	readVertices( (char*) "/home/njordan/Downloads/workspace/Air Hockey/src/vertices/puck.verts" , puck );
+	//readVertices( (char*) "/home/njordan/Downloads/workspace/Air Hockey/src/vertices/puck.verts" , puck );
 
-	readVertices( (char*) "/home/njordan/Downloads/workspace/Air Hockey/src/vertices/paddle.verts" , paddle1 );
+	//readVertices( (char*) "/home/njordan/Downloads/workspace/Air Hockey/src/vertices/paddle.verts" , paddle1 );
 
-	readVertices( (char*) "/home/njordan/Downloads/workspace/Air Hockey/src/vertices/paddle.verts" , paddle2 );
+	//readVertices( (char*) "/home/njordan/Downloads/workspace/Air Hockey/src/vertices/paddle.verts" , paddle2 );
 
 	objectList.push_back( table );
 
-	objectList.push_back( puck );
+	//objectList.push_back( puck );
 
 	//objectList.push_back( paddle1 );
 
 	//objectList.push_back( paddle2 );
 
-	table->matScale[0][0] = 20.0;
+	table->matScale[0][0] = 30.0;
 
-	table->matScale[1][1] = 20.0;
+	table->matScale[1][1] = 30.0;
 
-	table->matScale[2][2] = 20.0;
+	table->matScale[2][2] = 30.0;
 
-	table->matTranslation[0][3] = 50.0;
+	table->matTranslation[0][3] = 100.0;
+
+	table->matTranslation[1][3] = -100.0;
 
 	puck->matScale[0][0] = 50.0;
 
@@ -461,7 +436,6 @@ void initView() {
 
 	viewMatrix[2][2] = f[2];
 
-
 	//Projection Matrix (Ortho3D)
 
 	projMatrix = projMatrix.I();
@@ -479,10 +453,12 @@ void updateViewMatrix() {
 	//View Matrix
 	viewMatrix = viewMatrix.I();
 
-	float x = cos( currentAngle ) * 15;
-	float y = sin( currentAngle ) * 15;
+	float x = cos( currentAngle ) * 100;
+	float y = sin( currentAngle ) * 100;
 
-	TVec3<GLfloat> F = TVec3<GLfloat>( - x , - y , - 10.0 );
+	//TVec3<GLfloat> F = TVec3<GLfloat>( - x , - y , - 10.0 );
+
+	TVec3<GLfloat> F = TVec3<GLfloat>( -100 , - y , - x );
 
 	float mag = sqrt( pow(F[0],2) + pow(F[1],2) + pow(F[2],2) );
 

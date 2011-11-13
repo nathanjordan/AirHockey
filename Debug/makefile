@@ -12,6 +12,7 @@ RM := rm -rf
 -include src/objects/subdir.mk
 -include src/math/subdir.mk
 -include src/subdir.mk
+-include src/kixor/subdir.mk
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)

@@ -26,4 +26,5 @@ SUBDIRS := \
 src/objects \
 src/math \
 src \
+src/kixor \
 

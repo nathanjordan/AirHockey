@@ -9,9 +9,9 @@ void main(void) {
 
     //gl_FragColor = color;
     
-    //gl_FragColor = vec4( 1.0 , 1.0 , 1.0 , 1.0 );
+    gl_FragColor = vec4( 1.0 , 0.0 , 0.0 , 0.0);
     //////////////////////////////////////////////////////////////
-    
+    /*
 	vec3 L = normalize(gl_LightSource[0].position.xyz - v);   
 	vec3 E = normalize(-v); // we are in Eye Coordinates, so EyePos is (0,0,0)  
 	vec3 R = normalize(-reflect(L,N));  
@@ -30,5 +30,5 @@ void main(void) {
 	
 	// write Total Color:
 	gl_FragColor = gl_FrontLightModelProduct.sceneColor + Iamb + Idiff + Ispec;
-	
+	*/
 	}

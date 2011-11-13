@@ -19,6 +19,8 @@
 #include <math.h>
 #include <fstream>
 #include <string>
+#include <vector>
+#include "../kixor/objLoader.h"
 
 class Object {
 
@@ -28,9 +30,8 @@ public:
 	virtual ~Object();
 	Object& operator=( Object& right );
 	void draw( GLuint modelLocation, GLuint viewLocation, GLuint, GLuint vertexLocation, GLuint colorLocation , Mat4* , Mat4*);
-	void setVertices( int , TVec4<GLfloat>* );
-	void setColors( int , TVec4<GLfloat>* );
-	void rotate( float );
+	void setFaces( int numFaces , int numVertices, obj_face** newFaces , obj_vector** newVerts );
+	void rotate( float , float , float );
 
 	Mat4 matTranslation;
 	Mat4 matRotation;
@@ -38,6 +39,11 @@ public:
 	Mat4 matModel;
 	TVec4<GLfloat>* vertices;
 	TVec4<GLfloat>* colors;
+	TVec4<GLfloat>* normals;
+	obj_face* faces;
+	int numFaces;
+	objLoader* loader;
+
 	GLfloat height, width, depth;
 	int numVertices;
 
