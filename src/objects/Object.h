@@ -22,6 +22,11 @@
 #include <vector>
 #include "../kixor/objLoader.h"
 
+struct face {
+			int vertIndices[3];
+			int normalIndices[3];
+			};
+
 class Object {
 
 public:
@@ -30,22 +35,28 @@ public:
 	virtual ~Object();
 	Object& operator=( Object& right );
 	void draw( GLuint modelLocation, GLuint viewLocation, GLuint, GLuint vertexLocation, GLuint colorLocation , Mat4* , Mat4*);
-	void setFaces( int numFaces , int numVertices, obj_face** newFaces , obj_vector** newVerts );
+	void setFaces( objLoader* loader );
 	void rotate( float , float , float );
 
 	Mat4 matTranslation;
 	Mat4 matRotation;
 	Mat4 matScale;
 	Mat4 matModel;
+
+	TVec4<GLfloat>* vertexDrawList;
+	TVec4<GLfloat>* colorDrawList;
+	TVec4<GLfloat>* normalDrawList;
+
 	TVec4<GLfloat>* vertices;
 	TVec4<GLfloat>* colors;
 	TVec4<GLfloat>* normals;
-	obj_face* faces;
+
+	face* faces;
 	int numFaces;
-	objLoader* loader;
+
+	int numVertices;
 
 	GLfloat height, width, depth;
-	int numVertices;
 
 protected:
 

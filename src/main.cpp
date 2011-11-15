@@ -65,6 +65,9 @@ Object* table;
 Mat4 viewMatrix;
 Mat4 projMatrix;
 
+TVec4<GLfloat> eye;
+TVec4<GLfloat> at;
+
 float currentAngle = 0;
 
 std::vector<Object*> objectList;
@@ -262,8 +265,6 @@ void initWindow() {
 
 	glutDisplayFunc( displayCallback );
 
-	//glutSetKeyRepeat( GLUT_KEY_REPEAT_OFF );
-
 	glewExperimental = GL_TRUE;
 
 	glutMouseFunc(mouseButtonHandler);
@@ -271,8 +272,6 @@ void initWindow() {
 	glutPassiveMotionFunc(mouseMoveHandler);
 
 	glewInit();
-
-	//glOrtho(0.0,500.0,500.0,0.0,-1.0,1.0);
 
 	glutKeyboardFunc( keyboardHandler );
 
@@ -343,17 +342,9 @@ void readVertices( char* filename , Object* object ) {
 
 	loader->load( filename );
 
-	object = new Object();
+	object->setFaces( loader );
 
-	object->setFaces( loader->faceCount , loader->vertexCount , loader->faceList , loader->vertexList );
-
-	for( int i = 0 ; i < loader->vertexCount ; i++ ) {
-
-		std::cout << loader->vertexList[i]->e[0] << " " << loader->vertexList[i]->e[1] << " " << loader->vertexList[i]->e[2] << " \n";
-
-		}
-
-	//object->loader = loader;
+	delete loader;
 
 	}
 
@@ -369,123 +360,34 @@ void initObjects() {
 
 	readVertices( (char*) "/home/njordan/Desktop/test.obj" , table );
 
-	//readVertices( (char*) "/home/njordan/Downloads/workspace/Air Hockey/src/vertices/puck.verts" , puck );
-
-	//readVertices( (char*) "/home/njordan/Downloads/workspace/Air Hockey/src/vertices/paddle.verts" , paddle1 );
-
-	//readVertices( (char*) "/home/njordan/Downloads/workspace/Air Hockey/src/vertices/paddle.verts" , paddle2 );
-
 	objectList.push_back( table );
 
-	//objectList.push_back( puck );
+	table->matScale[0][0] = 1.0;
 
-	//objectList.push_back( paddle1 );
+	table->matScale[1][1] = 1.0;
 
-	//objectList.push_back( paddle2 );
+	table->matScale[2][2] = 1.0;
 
-	table->matScale[0][0] = 30.0;
+	table->matTranslation[0][3] = 0.0;
 
-	table->matScale[1][1] = 30.0;
-
-	table->matScale[2][2] = 30.0;
-
-	table->matTranslation[0][3] = 100.0;
-
-	table->matTranslation[1][3] = -100.0;
-
-	puck->matScale[0][0] = 50.0;
-
-	puck->matScale[1][1] = 50.0;
-
-	puck->matScale[2][2] = 5.0;
+	table->matTranslation[1][3] = 0.0;
 
 	}
 
 void initView() {
 
-	//View Matrix
+	eye = TVec4<GLfloat>( 10.0 , 10.0 , 10.0 , 1.0 );
+
+	at = TVec4<GLfloat>( 0.0 , 0.0 , 0.0 , 1.0 );
+
 	viewMatrix = viewMatrix.I();
 
-	TVec3<GLfloat> F = TVec3<GLfloat>( -10.0 , -10.0 , -10.0 );
+	TVec4<GLfloat> f  = norm( at - eye );
 
-	float mag = sqrt( pow(F[0],2) + pow(F[1],2) + pow(F[2],2) );
-
-	TVec3<GLfloat> f = TVec3<GLfloat>( F[0]/mag , F[1]/mag , F[2]/mag );
-
-	TVec3<GLfloat> up = TVec3<GLfloat>( 0.0 , 1.0 , 0.0 );
-
-	TVec3<GLfloat> s = cross( f , up );
-
-	TVec3<GLfloat> u = cross( s , f );
-
-	viewMatrix[0][0] = s[0];
-
-	viewMatrix[0][1] = s[1];
-
-	viewMatrix[0][2] = s[2];
-
-	viewMatrix[1][2] = u[0];
-
-	viewMatrix[1][2] = u[1];
-
-	viewMatrix[1][2] = u[2];
-
-	viewMatrix[2][2] = f[0];
-
-	viewMatrix[2][2] = f[1];
-
-	viewMatrix[2][2] = f[2];
-
-	//Projection Matrix (Ortho3D)
-
-	projMatrix = projMatrix.I();
-
-	projMatrix[0][0] = 2.0 / 480.0;
-
-	projMatrix[1][1] = 2.0 / 640.0;
-
-	projMatrix[2][2] = -2.0 / 1024.0;
+	TVec4<GLfloat> up  = norm( TVec4<GLfloat>( 0.0 , 1.0 , 0.0 , 1.0 ) );
 
 	}
 
 void updateViewMatrix() {
-
-	//View Matrix
-	viewMatrix = viewMatrix.I();
-
-	float x = cos( currentAngle ) * 100;
-	float y = sin( currentAngle ) * 100;
-
-	//TVec3<GLfloat> F = TVec3<GLfloat>( - x , - y , - 10.0 );
-
-	TVec3<GLfloat> F = TVec3<GLfloat>( -100 , - y , - x );
-
-	float mag = sqrt( pow(F[0],2) + pow(F[1],2) + pow(F[2],2) );
-
-	TVec3<GLfloat> f = TVec3<GLfloat>( F[0]/mag , F[1]/mag , F[2]/mag );
-
-	TVec3<GLfloat> up = TVec3<GLfloat>( 0.0 , 1.0 , 0.0 );
-
-	TVec3<GLfloat> s = cross( f , up );
-
-	TVec3<GLfloat> u = cross( s , f );
-
-	viewMatrix[0][0] = s[0];
-
-	viewMatrix[0][1] = s[1];
-
-	viewMatrix[0][2] = s[2];
-
-	viewMatrix[1][2] = u[0];
-
-	viewMatrix[1][2] = u[1];
-
-	viewMatrix[1][2] = u[2];
-
-	viewMatrix[2][2] = f[0];
-
-	viewMatrix[2][2] = f[1];
-
-	viewMatrix[2][2] = f[2];
 
 	}

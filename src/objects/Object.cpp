@@ -22,6 +22,22 @@ Object::Object( ) {
 
 	vertices = 0;
 
+	normals = 0;
+
+	faces = 0;
+
+	vertexDrawList = 0;
+
+	colorDrawList = 0;
+
+	normalDrawList = 0;
+
+	width = 0;
+
+	height = 0;
+
+	depth = 0;
+
 	matTranslation = matTranslation.I();
 
 	matRotation = matRotation.I();
@@ -42,14 +58,44 @@ Object& Object::operator=( Object& right ) {
     
     if (this != &right) {
 
-        //*this->loader = *right.loader;
-        
+    	numVertices = right.numVertices;
+
+    	numFaces = right.numFaces;
+
         this->matTranslation = right.matTranslation;
         
         this->matRotation = right.matRotation;
         
         this->matScale = right.matScale;
         
+        this->matModel = right.matModel;
+
+        for( int i = 0 ; i < numFaces ; i++ ) {
+
+        	faces[i] = right.faces[i];
+
+			}
+
+        for( int i = 0 ; i < numFaces * 4 ; i++ ) {
+
+        	vertexDrawList[i] = right.vertexDrawList[i];
+
+			colorDrawList[i] = right.colorDrawList[i];
+
+			normalDrawList[i] = right.normalDrawList[i];
+
+			}
+
+        for( int i = 0 ; i < numVertices ; i++ ) {
+
+        	vertices[i] = right.vertices[i];
+
+        	colors[i] = right.colors[i];
+
+        	normals[i] = right.normals[i];
+
+			}
+
         this->height = right.height;
         
         this->width = right.width;
@@ -83,6 +129,18 @@ void Object::draw( GLuint modelLocation, GLuint viewLocation, GLuint projectionL
 		for( int j = 0 ; j < 4 ; j++ ) {
 
 			tempColors[i * 4 + j] = colors[i][j];
+
+			}
+
+		}
+
+	GLfloat* tempNormals = new GLfloat[ numVertices * 4 ];
+
+	for( int i = 0 ; i < numVertices ; i++ ) {
+
+		for( int j = 0 ; j < 4 ; j++ ) {
+
+			tempNormals[i * 4 + j] = normals[i][j];
 
 			}
 
@@ -124,55 +182,118 @@ void Object::draw( GLuint modelLocation, GLuint viewLocation, GLuint projectionL
 
 	glUniformMatrix4fv( projectionLocation, 1 , true , *projMatrix );
 
-	int offset = 0;
-
-	for( int i = 0 ; i < numFaces ; i++ ) {
-
-		glDrawArrays( GL_POLYGON , offset , offset + faces[i].vertex_count );
-
-		offset += faces[i].vertex_count;
-
-		}
-
-	//glDrawArrays( GL_POLYGON , 0 , numVertices );
+	glDrawArrays( GL_TRIANGLES , 0 , numVertices * 4 );
 
 	delete [] tempColors;
 	delete [] tempVertices;
 
 	}
 
-void Object::setFaces( int numFaces , int numVertices, obj_face** newFaces , obj_vector** newVerts ) {
+void Object::setFaces( objLoader* loader ) {
 
-	faces = new obj_face[numFaces];
+	//Asumes 3 vertices/normals per face (triangle)
 
-	vertices = new TVec4<GLfloat>[numVertices];
+	numFaces = loader->faceCount;
 
-	colors = new TVec4<GLfloat>[numVertices];
+	faces = new face[loader->faceCount];
 
-	normals = new TVec4<GLfloat>[numVertices];
+	//vertex and normal indices
+	for( int i = 0 ; i < loader->faceCount ; i++ ) {
 
-	this->numFaces = numFaces;
+		//vertex indices
+		faces[i].vertIndices[0] = (loader->faceList[i])->vertex_index[0];
 
-	this->numVertices = numVertices;
+		faces[i].vertIndices[1] = (loader->faceList[i])->vertex_index[1];
 
-	for( int i = 0 ; i < numFaces ; i++ ) {
+		faces[i].vertIndices[2] = (loader->faceList[i])->vertex_index[2];
 
-		faces[i] = *newFaces[i];
+		//normal indices
+		faces[i].normalIndices[0] = (loader->faceList[i])->normal_index[0];
+
+		faces[i].normalIndices[1] = (loader->faceList[i])->normal_index[1];
+
+		faces[i].normalIndices[2] = (loader->faceList[i])->normal_index[2];
+		}
+
+	numVertices = loader->vertexCount;
+
+	vertices = new TVec4<GLfloat>[loader->vertexCount];
+
+	for( int i = 0 ; i < loader->vertexCount ; i++ ) {
+
+		vertices[i][0] = (loader->vertexList[i])->e[0];
+
+		vertices[i][1] = (loader->vertexList[i])->e[1];
+
+		vertices[i][2] = (loader->vertexList[i])->e[2];
+
+		vertices[i][3] = 1.0;
 
 		}
 
+	colors = new TVec4<GLfloat>[loader->vertexCount];
 
-	for( int i = 0, offset = 0 ; i < numFaces ; i++ ) {
+	for( int i = 0 ; i < loader->vertexCount ; i++ ) {
 
-		for( int j = 0 ; j < faces[i].vertex_count ; j++ ) {
+		colors[i][0] = 1.0;
 
-			vertices[offset] = TVec4<GLfloat>( newVerts[ faces[i].vertex_index[j] ]->e[0] , newVerts[ faces[i].vertex_index[j] ]->e[1] , newVerts[ faces[i].vertex_index[j] ]->e[2] , 1.0  );
+		colors[i][1] = 0.0;
 
-			normals[offset] = TVec4<GLfloat>( newVerts[ faces[i].normal_index[j] ]->e[0] , newVerts[ faces[i].normal_index[j] ]->e[1] , newVerts[ faces[i].normal_index[j] ]->e[2] , 0.0  );
+		colors[i][2] = 0.0;
 
-			colors[offset++] = TVec4<GLfloat>( 1.0 , 1.0 , 1.0 , 1.0 );
+		colors[i][3] = 1.0;
 
-			}
+		}
+
+	normals = new TVec4<GLfloat>[loader->normalCount];
+
+	for( int i = 0 ; i < loader->normalCount ; i++ ) {
+
+		normals[i][0] = (loader->normalList[i])->e[0];
+
+		normals[i][1] = (loader->normalList[i])->e[1];
+
+		normals[i][2] = (loader->normalList[i])->e[2];
+
+		normals[i][3] = 0.0;
+
+		}
+
+	//construct draw arrays
+
+	vertexDrawList = new TVec4<GLfloat>[loader->faceCount * 3];
+
+	for( int i = 0 ; i < numFaces ; i++ ) {
+
+		vertexDrawList[ i * 3 + 0 ] = vertices[ faces[i].vertIndices[0] ];
+
+		vertexDrawList[ i * 3 + 1 ] = vertices[ faces[i].vertIndices[1] ];
+
+		vertexDrawList[ i * 3 + 2 ] = vertices[ faces[i].vertIndices[2] ];
+
+		}
+
+	colorDrawList = new TVec4<GLfloat>[loader->faceCount * 3];
+
+	for( int i = 0 ; i < numFaces ; i++ ) {
+
+		colorDrawList[ i * 3 + 0 ] = colors[ faces[i].vertIndices[0] ];
+
+		colorDrawList[ i * 3 + 1 ] = colors[ faces[i].vertIndices[1] ];
+
+		colorDrawList[ i * 3 + 2 ] = colors[ faces[i].vertIndices[2] ];
+
+		}
+
+	normalDrawList = new TVec4<GLfloat>[loader->faceCount * 3];
+
+	for( int i = 0 ; i < numFaces ; i++ ) {
+
+		normalDrawList[ i * 3 + 0 ] = normals[ faces[i].normalIndices[0] ];
+
+		normalDrawList[ i * 3 + 1 ] = normals[ faces[i].normalIndices[1] ];
+
+		normalDrawList[ i * 3 + 2 ] = normals[ faces[i].normalIndices[2] ];
 
 		}
 
