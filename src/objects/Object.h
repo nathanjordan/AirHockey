@@ -32,11 +32,14 @@ class Object {
 public:
 
 	Object();
+	Object(const Object&);
 	virtual ~Object();
-	Object& operator=( Object& right );
+	Object& operator=(const Object& right );
 	void draw( GLuint modelLocation, GLuint viewLocation, GLuint, GLuint vertexLocation, GLuint colorLocation , Mat4* , Mat4*);
 	void setFaces( objLoader* loader );
 	void rotate( float , float , float );
+	void setColor( TVec4<GLfloat>* );
+	void updatePosition();
 
 	Mat4 matTranslation;
 	Mat4 matRotation;
@@ -47,6 +50,8 @@ public:
 	TVec4<GLfloat>* colorDrawList;
 	TVec4<GLfloat>* normalDrawList;
 
+	TVec3<GLfloat> vecVelocity;
+
 	TVec4<GLfloat>* vertices;
 	TVec4<GLfloat>* colors;
 	TVec4<GLfloat>* normals;
@@ -55,7 +60,8 @@ public:
 	int numFaces;
 
 	int numVertices;
-
+	bool isConstrained;
+	TVec4<GLfloat> constraints;
 	GLfloat height, width, depth;
 
 protected:

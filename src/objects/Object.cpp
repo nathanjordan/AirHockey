@@ -38,6 +38,8 @@ Object::Object( ) {
 
 	depth = 0;
 
+	vecVelocity = TVec3<GLfloat>( 0.0 , 0.0 , 0.0 );
+
 	matTranslation = matTranslation.I();
 
 	matRotation = matRotation.I();
@@ -48,13 +50,62 @@ Object::Object( ) {
 
 	}
 
+Object::Object( const Object& right ) {
+
+    	numVertices = right.numVertices;
+
+    	numFaces = right.numFaces;
+
+        this->matTranslation = right.matTranslation;
+
+        this->matRotation = right.matRotation;
+
+        this->matScale = right.matScale;
+
+        this->matModel = right.matModel;
+
+        for( int i = 0 ; i < numFaces ; i++ ) {
+
+        	faces[i] = right.faces[i];
+
+			}
+
+        for( int i = 0 ; i < numFaces * 3 ; i++ ) {
+
+        	vertexDrawList[i] = right.vertexDrawList[i];
+
+			colorDrawList[i] = right.colorDrawList[i];
+
+			normalDrawList[i] = right.normalDrawList[i];
+
+			}
+
+        for( int i = 0 ; i < numVertices ; i++ ) {
+
+        	vertices[i] = right.vertices[i];
+
+        	colors[i] = right.colors[i];
+
+        	normals[i] = right.normals[i];
+
+			}
+
+        this->height = right.height;
+
+        this->width = right.width;
+
+        this->depth = right.depth;
+
+
+	}
+
 Object::~Object() {
 
 	delete [] vertices;
 	delete [] colors;
 
 	}
-Object& Object::operator=( Object& right ) {
+Object& Object::operator=( const Object& right ) {
     
     if (this != &right) {
 
@@ -76,7 +127,7 @@ Object& Object::operator=( Object& right ) {
 
 			}
 
-        for( int i = 0 ; i < numFaces * 4 ; i++ ) {
+        for( int i = 0 ; i < numFaces * 3 ; i++ ) {
 
         	vertexDrawList[i] = right.vertexDrawList[i];
 
@@ -110,37 +161,37 @@ Object& Object::operator=( Object& right ) {
 
 void Object::draw( GLuint modelLocation, GLuint viewLocation, GLuint projectionLocation, GLuint vertexLocation, GLuint colorLocation , Mat4* viewMatrix, Mat4* projMatrix) {
 
-	GLfloat* tempVertices = new GLfloat[ numVertices * 4];
+	GLfloat* tempVertices = new GLfloat[ numFaces * 3 * 4];
 
-	for( int i = 0 ; i < numVertices ; i++ ) {
+	for( int i = 0 ; i < numFaces * 3 ; i++ ) {
 
 		for( int j = 0 ; j < 4 ; j++ ) {
 
-			tempVertices[i * 4 + j] = vertices[i][j];
+			tempVertices[i * 4 + j] = vertexDrawList[i][j];
 
 			}
 
 		}
 
-	GLfloat* tempColors = new GLfloat[ numVertices * 4];
+	GLfloat* tempColors = new GLfloat[ numFaces * 3 * 4];
 
-	for( int i = 0 ; i < numVertices ; i++ ) {
+	for( int i = 0 ; i < numFaces * 3 ; i++ ) {
 
 		for( int j = 0 ; j < 4 ; j++ ) {
 
-			tempColors[i * 4 + j] = colors[i][j];
+			tempColors[i * 4 + j] = colorDrawList[i][j];
 
 			}
 
 		}
 
-	GLfloat* tempNormals = new GLfloat[ numVertices * 4 ];
+	GLfloat* tempNormals = new GLfloat[ numFaces * 3 * 4 ];
 
-	for( int i = 0 ; i < numVertices ; i++ ) {
+	for( int i = 0 ; i < numFaces * 3 ; i++ ) {
 
 		for( int j = 0 ; j < 4 ; j++ ) {
 
-			tempNormals[i * 4 + j] = normals[i][j];
+			tempNormals[i * 4 + j] = normalDrawList[i][j];
 
 			}
 
@@ -155,7 +206,7 @@ void Object::draw( GLuint modelLocation, GLuint viewLocation, GLuint projectionL
 
 	// Copy the vertex data from diamond to our buffer
 	// 8 * sizeof(GLfloat) is the size of the diamond array, since it contains 8 GLfloat values
-	glBufferData( GL_ARRAY_BUFFER , numVertices * 4 * sizeof(GLfloat) , tempVertices , GL_STATIC_DRAW );
+	glBufferData( GL_ARRAY_BUFFER , numFaces * 3 * 4 * sizeof(GLfloat) , tempVertices , GL_STATIC_DRAW );
 
 	// Specify that our coordinate data is going into attribute index 0, and contains two floats per vertex
 	glVertexAttribPointer( vertexLocation , 4 , GL_FLOAT , GL_FALSE , 0 , 0 );
@@ -168,7 +219,7 @@ void Object::draw( GLuint modelLocation, GLuint viewLocation, GLuint projectionL
 
 	// Copy the color data from colors to our buffer
 	// 12 * sizeof(GLfloat) is the size of the colors array, since it contains 12 GLfloat values
-	glBufferData( GL_ARRAY_BUFFER , numVertices * 4 * sizeof(GLfloat) , tempColors , GL_STATIC_DRAW );
+	glBufferData( GL_ARRAY_BUFFER , numFaces * 3 * 4 * sizeof(GLfloat) , tempColors , GL_STATIC_DRAW );
 
 	// Specify that our color data is going into attribute index 1, and contains three floats per vertex
 	glVertexAttribPointer( colorLocation , 4 , GL_FLOAT, GL_FALSE, 0, 0);
@@ -182,10 +233,11 @@ void Object::draw( GLuint modelLocation, GLuint viewLocation, GLuint projectionL
 
 	glUniformMatrix4fv( projectionLocation, 1 , true , *projMatrix );
 
-	glDrawArrays( GL_TRIANGLES , 0 , numVertices * 4 );
+	glDrawArrays( GL_TRIANGLES, 0 , numFaces * 3 );
 
 	delete [] tempColors;
 	delete [] tempVertices;
+	delete [] tempNormals;
 
 	}
 
@@ -297,4 +349,26 @@ void Object::setFaces( objLoader* loader ) {
 
 		}
 
+	}
+
+void Object::setColor( TVec4<GLfloat>* color ) {
+
+	for( int i = 0 ; i < numVertices ; i++ ) {
+
+		colors[i] = *color;
+
+		}
+
+	for( int i = 0 ; i < numFaces * 3 ; i++ ) {
+
+		colorDrawList[i] = *color;
+
+		}
+
+	}
+
+void Object::updatePosition() {
+	matTranslation[0][3] += vecVelocity[0];
+	matTranslation[1][3] += vecVelocity[1];
+	matTranslation[2][3] += vecVelocity[2];
 	}

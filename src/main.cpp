@@ -48,6 +48,8 @@ TVec3<GLfloat>* crossProduct( TVec3<GLfloat>* a, TVec3<GLfloat>* b);
 
 void updateViewMatrix();
 
+void calculateBounce();
+
 GLuint program;
 GLuint vertexShader;
 GLuint fragmentShader;
@@ -65,8 +67,8 @@ Object* table;
 Mat4 viewMatrix;
 Mat4 projMatrix;
 
-TVec4<GLfloat> eye;
-TVec4<GLfloat> at;
+TVec3<GLfloat> eye;
+TVec3<GLfloat> at;
 
 float currentAngle = 0;
 
@@ -114,8 +116,8 @@ void initShaders() {
 
 	GLchar *vertexsource, *fragmentsource;
 
-	vertexsource = parseGLSL((char*)"/home/njordan/Downloads/workspace/Air Hockey/src/shaders/shapes.vert");
-	fragmentsource = parseGLSL((char*)"/home/njordan/Downloads/workspace/Air Hockey/src/shaders/shapes.frag");
+	vertexsource = parseGLSL((char*)"/home/njordan/Downloads/workspace/AirHockey/src/shaders/shapes.vert");
+	fragmentsource = parseGLSL((char*)"/home/njordan/Downloads/workspace/AirHockey/src/shaders/shapes.frag");
 
 	glShaderSource( vertexShader , 1 , (const GLchar**)&vertexsource , NULL );
 	glShaderSource( fragmentShader , 1 , (const GLchar**)&fragmentsource , NULL );
@@ -223,7 +225,11 @@ void initShaders() {
 
 	colorLocation = glGetAttribLocation( program , "color" );
 
-	glDisable(GL_LIGHTING);
+	glOrtho( -10.0 , 10.0 , -10.0 , 10.0 , -20.0 , 20.0 );
+
+	gluLookAt( 2.0 , 2.0 , 2.0 , 0.0 , 0.0 , 0.0 , 0.0 , 1.0 , 0.0 );
+
+	//glDisable(GL_LIGHTING);
 
 	/*glEnable(GL_LIGHTING);
 
@@ -239,7 +245,6 @@ void initShaders() {
 	glLightfv(GL_LIGHT0, GL_SPECULAR, specular );
 	glLightfv(GL_LIGHT0, GL_POSITION, pos );
 */
-    glEnable( GL_DEPTH_TEST );
     
     
     //clear the background to black
@@ -257,7 +262,7 @@ void initWindow() {
 
 	glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH );
 
-	glutInitWindowSize(640,480);
+	glutInitWindowSize(700,700);
 
 	glutInitWindowPosition(0, 0);
 
@@ -288,6 +293,14 @@ void mouseButtonHandler( int button, int state, int x, int y) {
 
 	}
 void timerTick( int value ) {
+
+	calculateBounce();
+
+	for( unsigned int i = 0 ; i < objectList.size() ; i++ ) {
+
+		objectList[i]->updatePosition();
+
+		}
 
 	//redraw the screen
 	glutPostRedisplay();
@@ -358,36 +371,155 @@ void initObjects() {
 
 	paddle2 = new Object();
 
-	readVertices( (char*) "/home/njordan/Desktop/test.obj" , table );
+	readVertices( (char*) "/home/njordan/Desktop/table.obj" , table );
 
 	objectList.push_back( table );
 
-	table->matScale[0][0] = 1.0;
+	readVertices( (char*) "/home/njordan/Desktop/puck.obj" , puck );
 
-	table->matScale[1][1] = 1.0;
+	objectList.push_back( puck );
 
-	table->matScale[2][2] = 1.0;
+	readVertices( (char*) "/home/njordan/Desktop/paddle.obj" , paddle1 );
 
-	table->matTranslation[0][3] = 0.0;
+	objectList.push_back( paddle1 );
 
-	table->matTranslation[1][3] = 0.0;
+	readVertices( (char*) "/home/njordan/Desktop/paddle.obj" , paddle2 );
+
+	objectList.push_back( paddle2 );
+
+	table->matScale[0][0] = 2.0;
+
+	table->matScale[1][1] = 2.0;
+
+	table->matScale[2][2] = 2.0;
+
+	table->matTranslation[0][3] = -9.0;
+
+	table->matTranslation[1][3] = -2.0;
+
+	table->matTranslation[2][3] = 0.0;
+
+	paddle1->matTranslation[0][3] = 8.0;
+
+	paddle2->matTranslation[0][3] = -6.0;
+
+	puck->matScale[0][0] = 0.5;
+
+	puck->matScale[1][1] =0.5;
+
+	puck->matScale[2][2] = 0.5;
+
+	TVec4<GLfloat> white = TVec4<GLfloat>( 1.0 , 1.0 , 1.0 , 1.0 );
+
+	TVec4<GLfloat> red = TVec4<GLfloat>( 1.0 , 0.0 , 0.0 , 1.0 );
+
+	TVec4<GLfloat> black = TVec4<GLfloat>( 0.0 , 0.0 , 0.0 , 1.0 );
+
+	TVec4<GLfloat> gray = TVec4<GLfloat>( 0.6 , 0.6 , 0.6 , 1.0 );
+
+	puck->setColor( &black );
+
+	table->setColor( &gray );
+
+	paddle1->setColor( &red );
+
+	paddle2->setColor( &red );
+
+	puck->vecVelocity[0] = 0.08;
+
+	puck->vecVelocity[2] = 0.08;
+
+	paddle1->matTranslation[2][3] = -2.0;
+
+	paddle2->matTranslation[2][3] = -2.0;
+
+	table->matTranslation[1][3] = -1.5;
 
 	}
 
 void initView() {
 
-	eye = TVec4<GLfloat>( 10.0 , 10.0 , 10.0 , 1.0 );
+	/*eye = TVec4<GLfloat>( 10.0 , 10.0 , 10.0 , 1.0 );
 
-	at = TVec4<GLfloat>( 0.0 , 0.0 , 0.0 , 1.0 );
+	at = TVec4<GLfloat>( 0.0 , 0.0 , 0.0 , 1.0);
 
 	viewMatrix = viewMatrix.I();
 
+	TVec4<GLfloat> x  = norm( at - eye );
 	TVec4<GLfloat> f  = norm( at - eye );
 
-	TVec4<GLfloat> up  = norm( TVec4<GLfloat>( 0.0 , 1.0 , 0.0 , 1.0 ) );
+	TVec4<GLfloat> up  = norm( TVec3<GLfloat>( 0.0 , 1.0 , 0.0 ) );
+
+	TVec4<GLfloat> s = cross( f , up );
+
+	TVec4<GLfloat> u = cross( s , f );
+
+	//view crap
+	viewMatrix[0][0] = s[0];
+	viewMatrix[0][1] = s[1];
+	viewMatrix[0][2] = s[2];
+
+	viewMatrix[1][0] = u[0];
+	viewMatrix[1][1] = u[1];
+	viewMatrix[1][2] = u[2];
+
+	viewMatrix[2][0] = -f[0];
+	viewMatrix[2][1] = -f[1];
+	viewMatrix[2][2] = -f[2];
+
+	//translation crap
+	viewMatrix[0][3] = -eye[0];
+	viewMatrix[1][3] = -eye[1];
+	viewMatrix[2][3] = -eye[2];
+*/
+	TVec4<GLfloat> a = TVec4<GLfloat>( 0.707107 , 0.0 , - 0.707107 , 1.0 );
+	TVec4<GLfloat> b = TVec4<GLfloat>( -0.4082 , 0.8164 , -0.4082 , 1.0 );
+	TVec4<GLfloat> c = TVec4<GLfloat>( 0.577 , 0.577 , 0.577 , -17.3205 );
+	TVec4<GLfloat> d = TVec4<GLfloat>( 0.0 , 0.0 , 0.0 , 1.0 );
+
+	viewMatrix = Mat4( a,b,c,d );
+
+	a = TVec4<GLfloat>( 0.5 , 0.0 , 0.0 , 0.0 );
+	b = TVec4<GLfloat>( 0.0 , 0.5 , 0.0 , 0.0 );
+	c = TVec4<GLfloat>( 0.0 , 0.0 , -0.5 , 0.0 );
+	d = TVec4<GLfloat>( 0.0 , 0.0 , 0.0 , 1.0 );
+
+	projMatrix = Mat4( a,b,c,d );
 
 	}
 
 void updateViewMatrix() {
+
+	}
+
+void calculateBounce() {
+
+	float maxX = 8.0, minX = -7.0, maxZ = 3.5, minZ = -4.0;
+
+	if( puck->matTranslation[0][3] > maxX ) {
+		puck->vecVelocity[0] = - puck->vecVelocity[0];
+		if(puck->vecVelocity[0] > 0 )
+			puck->vecVelocity[0] = - puck->vecVelocity[0];
+		}
+
+
+	else if( puck->matTranslation[0][3] < minX ) {
+		puck->vecVelocity[0] = - puck->vecVelocity[0];
+		if(puck->vecVelocity[0] < 0 )
+			puck->vecVelocity[0] = - puck->vecVelocity[0];
+		}
+
+	if( puck->matTranslation[2][3] > maxZ ) {
+			puck->vecVelocity[2] = - puck->vecVelocity[2];
+			if(puck->vecVelocity[2] > 0 )
+				puck->vecVelocity[2] = - puck->vecVelocity[2];
+			}
+
+
+		else if( puck->matTranslation[2][3] < minZ ) {
+			puck->vecVelocity[2] = - puck->vecVelocity[2];
+			if(puck->vecVelocity[2] < 0 )
+				puck->vecVelocity[2] = - puck->vecVelocity[2];
+			}
 
 	}
