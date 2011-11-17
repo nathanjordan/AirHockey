@@ -56,12 +56,13 @@ public:
 	TVec4<GLfloat>* colors;
 	TVec4<GLfloat>* normals;
 
+	bool isConstrained;
+	GLfloat constraints[4];
+
 	face* faces;
 	int numFaces;
 
 	int numVertices;
-	bool isConstrained;
-	TVec4<GLfloat> constraints;
 	GLfloat height, width, depth;
 
 protected:

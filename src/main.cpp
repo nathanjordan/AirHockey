@@ -50,6 +50,12 @@ void updateViewMatrix();
 
 void calculateBounce();
 
+void keyboardTimer( int x );
+
+void specialUpHandler( int key , int x , int y );
+
+void checkCollisions();
+
 GLuint program;
 GLuint vertexShader;
 GLuint fragmentShader;
@@ -71,6 +77,10 @@ TVec3<GLfloat> eye;
 TVec3<GLfloat> at;
 
 float currentAngle = 0;
+
+int prevX = -1 , prevY = -1;
+
+bool movingLeft = false , movingForward = false, movingBackwards = false, movingRight = false;
 
 std::vector<Object*> objectList;
 
@@ -225,9 +235,11 @@ void initShaders() {
 
 	colorLocation = glGetAttribLocation( program , "color" );
 
-	glOrtho( -10.0 , 10.0 , -10.0 , 10.0 , -20.0 , 20.0 );
+	eye = TVec3<GLfloat>( 1.0 , 1.0 , 1.0 );
 
-	gluLookAt( 2.0 , 2.0 , 2.0 , 0.0 , 0.0 , 0.0 , 0.0 , 1.0 , 0.0 );
+	glOrtho( -5.0 , 5.0 , -5.0 , 5.0 , -10.0 , 10.0 );
+
+	gluLookAt( 0.0 , 2.0 , 0.0 , 0.0 , 0.0 , 0.0 , -1.0 , 0.0 , 0.0 );
 
 	//glDisable(GL_LIGHTING);
 
@@ -272,6 +284,8 @@ void initWindow() {
 
 	glewExperimental = GL_TRUE;
 
+	glutSetCursor( GL_NONE );
+
 	glutMouseFunc(mouseButtonHandler);
 
 	glutPassiveMotionFunc(mouseMoveHandler);
@@ -282,11 +296,37 @@ void initWindow() {
 
 	glutSpecialFunc( specialHandler );
 
+	glutSpecialUpFunc( specialUpHandler );
+
 	glutTimerFunc( 15 , timerTick , 0 );
+
+	glutTimerFunc( 30 , keyboardTimer , 0 );
 
 	}
 
 void mouseMoveHandler(int x, int y) {
+
+	if( prevX < 0 ) {
+
+		prevX = x;
+
+		prevY = y;
+
+		return;
+
+		}
+
+	float relZ = (prevX - x) * 0.02;
+
+	float relX = -(prevY - y) * 0.02;
+
+	prevX = x;
+
+	prevY = y;
+
+	paddle1->vecVelocity[0] = relX;
+
+	paddle1->vecVelocity[2] = relZ;
 
 	}
 void mouseButtonHandler( int button, int state, int x, int y) {
@@ -301,6 +341,9 @@ void timerTick( int value ) {
 		objectList[i]->updatePosition();
 
 		}
+
+	paddle1->vecVelocity[0] = 0.0;
+	paddle1->vecVelocity[2] = 0.0;
 
 	//redraw the screen
 	glutPostRedisplay();
@@ -330,7 +373,7 @@ void keyboardHandler(unsigned char key , int x , int y ) {
 
 	if( key == '[' ) {
 
-		currentAngle += 0.1;
+		currentAngle += 0.01;
 
 		updateViewMatrix();
 
@@ -338,7 +381,7 @@ void keyboardHandler(unsigned char key , int x , int y ) {
 
 	else if (key == ']') {
 
-		currentAngle -= 0.1;
+		currentAngle -= 0.01;
 
 		updateViewMatrix();
 
@@ -346,6 +389,86 @@ void keyboardHandler(unsigned char key , int x , int y ) {
 
 	}
 void specialHandler( int key , int x , int y ) {
+
+	if( key == GLUT_KEY_UP ) {
+
+		movingForward = true;
+
+		}
+
+	if( key == GLUT_KEY_DOWN ) {
+
+		movingBackwards = true;
+
+		}
+
+	if( key == GLUT_KEY_LEFT ) {
+
+		movingLeft = true;
+
+		}
+
+	if( key == GLUT_KEY_RIGHT ) {
+
+		movingRight = true;
+
+		}
+
+	}
+void specialUpHandler( int key , int x , int y )  {
+
+	if( key == GLUT_KEY_UP ) {
+
+		movingForward = false;
+
+		paddle2->vecVelocity[0] = 0.0;
+
+		}
+
+	if( key == GLUT_KEY_DOWN ) {
+
+		movingBackwards = false;
+
+		paddle2->vecVelocity[0] = 0.0;
+
+		}
+
+	if( key == GLUT_KEY_LEFT ) {
+
+		movingLeft = false;
+
+		paddle2->vecVelocity[2] = 0.0;
+
+		}
+
+	if( key == GLUT_KEY_RIGHT ) {
+
+		movingRight = false;
+
+		paddle2->vecVelocity[2] = 0.0;
+
+		}
+
+	}
+void keyboardTimer( int x ) {
+
+	if( movingForward ) {
+		paddle2->vecVelocity[0] += 0.05;
+	}
+	else if( movingBackwards ) {
+		paddle2->vecVelocity[0] -= 0.05;
+	}
+
+	if( movingLeft ) {
+		paddle2->vecVelocity[2] -= 0.05;
+	}
+	else if( movingRight ) {
+		paddle2->vecVelocity[2] += 0.05;
+	}
+
+	checkCollisions();
+
+	glutTimerFunc( 30 , keyboardTimer , 0 );
 
 	}
 
@@ -387,28 +510,6 @@ void initObjects() {
 
 	objectList.push_back( paddle2 );
 
-	table->matScale[0][0] = 2.0;
-
-	table->matScale[1][1] = 2.0;
-
-	table->matScale[2][2] = 2.0;
-
-	table->matTranslation[0][3] = -9.0;
-
-	table->matTranslation[1][3] = -2.0;
-
-	table->matTranslation[2][3] = 0.0;
-
-	paddle1->matTranslation[0][3] = 8.0;
-
-	paddle2->matTranslation[0][3] = -6.0;
-
-	puck->matScale[0][0] = 0.5;
-
-	puck->matScale[1][1] =0.5;
-
-	puck->matScale[2][2] = 0.5;
-
 	TVec4<GLfloat> white = TVec4<GLfloat>( 1.0 , 1.0 , 1.0 , 1.0 );
 
 	TVec4<GLfloat> red = TVec4<GLfloat>( 1.0 , 0.0 , 0.0 , 1.0 );
@@ -425,15 +526,29 @@ void initObjects() {
 
 	paddle2->setColor( &red );
 
-	puck->vecVelocity[0] = 0.08;
+	puck->vecVelocity[0] = 0.02;
 
-	puck->vecVelocity[2] = 0.08;
+	puck->vecVelocity[2] = 0.01;
 
-	paddle1->matTranslation[2][3] = -2.0;
+	paddle1->constraints[0] = 4.0;
 
-	paddle2->matTranslation[2][3] = -2.0;
+	paddle1->constraints[1] = 2.0;
 
-	table->matTranslation[1][3] = -1.5;
+	paddle1->constraints[2] = 2.0;
+
+	paddle1->constraints[3] = -2.0;
+
+	paddle1->isConstrained = true;
+
+	paddle2->constraints[0] = -2.0;
+
+	paddle2->constraints[1] = -4.0;
+
+	paddle2->constraints[2] = 2.0;
+
+	paddle2->constraints[3] = -2.0;
+
+	paddle2->isConstrained = true;
 
 	}
 
@@ -490,11 +605,26 @@ void initView() {
 
 void updateViewMatrix() {
 
+	eye[0] = 2 * cos( currentAngle );
+
+	eye[2] = 2 * sin( currentAngle );
+
+	glMatrixMode( GL_MODELVIEW );
+
+	glLoadIdentity();
+
+	glOrtho( -5.0 , 5.0 , -5.0 , 5.0 , -10.0 , 10.0 );
+
+	gluLookAt( eye[0] , eye[1] , eye[2] , 0.0 , 0.0 , 0.0 , 0.0 , 1.0 , 0.0 );
+
+
 	}
 
 void calculateBounce() {
 
-	float maxX = 8.0, minX = -7.0, maxZ = 3.5, minZ = -4.0;
+	float radius = puck->width / 2;
+
+	float maxX = 4.0 - radius, minX = -4.0 + radius, maxZ = 2.0 - radius, minZ = -2.0 + radius;
 
 	if( puck->matTranslation[0][3] > maxX ) {
 		puck->vecVelocity[0] = - puck->vecVelocity[0];
@@ -521,5 +651,60 @@ void calculateBounce() {
 			if(puck->vecVelocity[2] < 0 )
 				puck->vecVelocity[2] = - puck->vecVelocity[2];
 			}
+
+	}
+
+void checkCollisions() {
+
+	TVec2<GLfloat> puckPoint( puck->matTranslation[0][3] , puck->matTranslation[2][3] );
+
+	TVec2<GLfloat> paddle1Point( paddle1->matTranslation[0][3] , paddle1->matTranslation[2][3] );
+
+	TVec2<GLfloat> paddle2Point( paddle2->matTranslation[0][3] , paddle2->matTranslation[2][3] );
+
+	GLfloat paddlePuckRadius = ( puck->width / 2 ) + (paddle1->width / 2);
+
+	GLfloat paddle1Dist = sqrt( pow( puckPoint[0] - paddle1Point[0] , 2 ) + pow( puckPoint[1] - paddle1Point[1] , 2 ) );
+
+	GLfloat paddle2Dist = sqrt( pow( puckPoint[0] - paddle2Point[0] , 2 ) + pow( puckPoint[1] - paddle2Point[1] , 2 ) );
+
+	if( paddle1Dist < paddlePuckRadius ) {
+
+		float y = puckPoint[1] - paddle1Point[1];
+
+		float x = puckPoint[0] - paddle1Point[0];
+
+		float theta = atan( y / x );
+
+		float puckVel = sqrt( pow( puck->vecVelocity[0] , 2 ) + pow( puck->vecVelocity[1] , 2 ) );
+
+		float vZ = puckVel * cos( theta );
+
+		float vX = puckVel * sin( theta );
+
+		puck->vecVelocity[0] = vZ;
+
+		puck->vecVelocity[2] = vX;
+
+		}
+
+	if( paddle2Dist < paddlePuckRadius ) {
+
+		float y = puckPoint[1] - paddle2Point[1];
+
+		float x = puckPoint[0] - paddle2Point[0];
+
+		float theta = atan( y / x );
+
+		float puckVel = sqrt( pow( puck->vecVelocity[0] , 2 ) + pow( puck->vecVelocity[1] , 2 ) );
+
+		float vZ = puckVel * cos( theta );
+
+		float vX = puckVel * sin( theta );
+
+		puck->vecVelocity[0] = vZ;
+
+		puck->vecVelocity[2] = vX;
+		}
 
 	}
