@@ -32,6 +32,8 @@ void initObjects();
 
 void initView();
 
+void initMenu();
+
 void mouseMoveHandler(int x, int y);
 
 void mouseButtonHandler( int button, int state, int x, int y);
@@ -54,7 +56,25 @@ void keyboardTimer( int x );
 
 void specialUpHandler( int key , int x , int y );
 
-void checkCollisions();
+bool checkCollisions();
+
+void physicsTimer( int x );
+
+void score( int player );
+
+void checkForScore( GLfloat maxX , GLfloat minX ,GLfloat goalMinZ , GLfloat goalMaxZ );
+
+void gameOver();
+
+void nextPoint( int x );
+
+void mainMenuCallback( int x );
+
+void newGame();
+
+void flyingStuff();
+
+void resetGameboard();
 
 GLuint program;
 GLuint vertexShader;
@@ -77,14 +97,28 @@ TVec3<GLfloat> eye;
 TVec3<GLfloat> at;
 
 float currentAngle = 0;
+TVec3<GLfloat> p2A1 = 0;
+TVec3<GLfloat> p2A2 = 0;
 
 int prevX = -1 , prevY = -1;
 
 bool movingLeft = false , movingForward = false, movingBackwards = false, movingRight = false;
 
+bool paused = false, playing = false;
+
 std::vector<Object*> objectList;
 
+int player1Score = 0;
+int player2Score = 0;
+
+int MENU_NEW_GAME = 0;
+int MENU_STOP_GAME = 1;
+int MENU_PAUSE_GAME = 2;
+int MENU_QUIT_GAME = 3;
+
 int main() {
+
+	srand( time( NULL ) );
 
 	initWindow();
 
@@ -93,6 +127,8 @@ int main() {
 	initView();
 
 	initObjects();
+
+	initMenu();
 
 	glutMainLoop();
 
@@ -239,7 +275,9 @@ void initShaders() {
 
 	glOrtho( -5.0 , 5.0 , -5.0 , 5.0 , -10.0 , 10.0 );
 
-	gluLookAt( 0.0 , 2.0 , 0.0 , 0.0 , 0.0 , 0.0 , -1.0 , 0.0 , 0.0 );
+	//gluLookAt( 0.0 , 2.0 , 0.0 , 0.0 , 0.0 , 0.0 , -1.0 , 0.0 , 0.0 );
+
+	gluLookAt( 2.0 , 2.0 , 2.0 , 0.0 , 0.0 , 0.0 , 0.0 , 1.0 , 0.0 );
 
 	//glDisable(GL_LIGHTING);
 
@@ -302,9 +340,14 @@ void initWindow() {
 
 	glutTimerFunc( 30 , keyboardTimer , 0 );
 
+	glutTimerFunc( 15 , physicsTimer , 0 );
+
 	}
 
 void mouseMoveHandler(int x, int y) {
+	if( !playing ) {
+		return;
+		}
 
 	if( prevX < 0 ) {
 
@@ -328,11 +371,23 @@ void mouseMoveHandler(int x, int y) {
 
 	paddle1->vecVelocity[2] = relZ;
 
+	//crappyMovingPhysicsP1 = true;
+
 	}
+
 void mouseButtonHandler( int button, int state, int x, int y) {
 
 	}
+
 void timerTick( int value ) {
+
+	if( !playing ) {
+
+		glutTimerFunc( 15 , timerTick , 0 );
+
+		return;
+
+		}
 
 	calculateBounce();
 
@@ -364,6 +419,8 @@ void displayCallback() {
 
 		}
 
+	//glutStrokeString( GLUT_STROKE_ROMAN , (unsigned char*) "text to render" );
+
 	//show the changes
 	glutSwapBuffers();
 
@@ -389,7 +446,9 @@ void keyboardHandler(unsigned char key , int x , int y ) {
 
 	}
 void specialHandler( int key , int x , int y ) {
-
+	if( !playing ) {
+			return;
+			}
 	if( key == GLUT_KEY_UP ) {
 
 		movingForward = true;
@@ -413,10 +472,14 @@ void specialHandler( int key , int x , int y ) {
 		movingRight = true;
 
 		}
-
 	}
-void specialUpHandler( int key , int x , int y )  {
 
+void specialUpHandler( int key , int x , int y )  {
+	if( !playing ) {
+
+			return;
+
+			}
 	if( key == GLUT_KEY_UP ) {
 
 		movingForward = false;
@@ -448,25 +511,53 @@ void specialUpHandler( int key , int x , int y )  {
 		paddle2->vecVelocity[2] = 0.0;
 
 		}
+	}
+void physicsTimer( int x ) {
+
+	if( !playing ) {
+
+		glutTimerFunc( 40 , physicsTimer , 0 );
+
+		return;
+
+		}
+
+	if ( checkCollisions() ) {
+
+		glutTimerFunc( 40 , physicsTimer , 0 );
+
+		}
+	else {
+
+		glutTimerFunc( 15 , physicsTimer , 0 );
+
+		}
+
 
 	}
+
 void keyboardTimer( int x ) {
+
+	if( !playing ) {
+
+		glutTimerFunc( 30 , keyboardTimer , 0 );
+
+		return;
+		}
 
 	if( movingForward ) {
 		paddle2->vecVelocity[0] += 0.05;
-	}
+		}
 	else if( movingBackwards ) {
 		paddle2->vecVelocity[0] -= 0.05;
-	}
+		}
 
 	if( movingLeft ) {
 		paddle2->vecVelocity[2] -= 0.05;
-	}
+		}
 	else if( movingRight ) {
 		paddle2->vecVelocity[2] += 0.05;
-	}
-
-	checkCollisions();
+		}
 
 	glutTimerFunc( 30 , keyboardTimer , 0 );
 
@@ -550,6 +641,8 @@ void initObjects() {
 
 	paddle2->isConstrained = true;
 
+	resetGameboard();
+
 	}
 
 void initView() {
@@ -603,6 +696,22 @@ void initView() {
 
 	}
 
+void initMenu() {
+
+	glutCreateMenu( mainMenuCallback );
+
+	glutAddMenuEntry( "New Game" , MENU_NEW_GAME );
+
+	glutAddMenuEntry( "Stop Game" , MENU_STOP_GAME );
+
+	glutAddMenuEntry( "Pause/Resume Game" , MENU_PAUSE_GAME );
+
+	glutAddMenuEntry( "Quit Game" , MENU_QUIT_GAME );
+
+	glutAttachMenu( GLUT_RIGHT_BUTTON );
+
+	}
+
 void updateViewMatrix() {
 
 	eye[0] = 2 * cos( currentAngle );
@@ -626,6 +735,11 @@ void calculateBounce() {
 
 	float maxX = 4.0 - radius, minX = -4.0 + radius, maxZ = 2.0 - radius, minZ = -2.0 + radius;
 
+	float goalMinZ = -1.0 + radius, goalMaxZ = 1.0 - radius;
+
+	checkForScore( maxX , minX , goalMinZ , goalMaxZ );
+
+	//bouncing stuff
 	if( puck->matTranslation[0][3] > maxX ) {
 		puck->vecVelocity[0] = - puck->vecVelocity[0];
 		if(puck->vecVelocity[0] > 0 )
@@ -646,15 +760,15 @@ void calculateBounce() {
 			}
 
 
-		else if( puck->matTranslation[2][3] < minZ ) {
+	else if( puck->matTranslation[2][3] < minZ ) {
+		puck->vecVelocity[2] = - puck->vecVelocity[2];
+		if(puck->vecVelocity[2] < 0 )
 			puck->vecVelocity[2] = - puck->vecVelocity[2];
-			if(puck->vecVelocity[2] < 0 )
-				puck->vecVelocity[2] = - puck->vecVelocity[2];
-			}
+		}
 
 	}
 
-void checkCollisions() {
+bool checkCollisions() {
 
 	TVec2<GLfloat> puckPoint( puck->matTranslation[0][3] , puck->matTranslation[2][3] );
 
@@ -674,7 +788,7 @@ void checkCollisions() {
 
 		float x = puckPoint[0] - paddle1Point[0];
 
-		float theta = atan( y / x );
+		float theta = atan2(y, x);
 
 		float puckVel = sqrt( pow( puck->vecVelocity[0] , 2 ) + pow( puck->vecVelocity[1] , 2 ) );
 
@@ -686,6 +800,17 @@ void checkCollisions() {
 
 		puck->vecVelocity[2] = vX;
 
+		float paddleVel = sqrt( pow( paddle1->vecVelocity[0] , 2 ) + pow( paddle1->vecVelocity[1] , 2 ) );
+
+		float vZp = paddleVel * cos( theta );
+
+		float vXp = paddleVel * sin( theta );
+
+		puck->vecVelocity[0] = vZ + vZp;
+
+		puck->vecVelocity[2] = vX + vXp;
+
+		return true;
 		}
 
 	if( paddle2Dist < paddlePuckRadius ) {
@@ -702,9 +827,160 @@ void checkCollisions() {
 
 		float vX = puckVel * sin( theta );
 
-		puck->vecVelocity[0] = vZ;
+		float paddleVel = sqrt( pow( paddle2->vecVelocity[0] , 2 ) + pow( paddle2->vecVelocity[1] , 2 ) );
 
-		puck->vecVelocity[2] = vX;
+		float vZp = paddleVel * cos( theta );
+
+		float vXp = paddleVel * sin( theta );
+
+		puck->vecVelocity[0] = vZ + vZp;
+
+		puck->vecVelocity[2] = vX + vXp;
+
+		return true;
+
+		}
+
+	return false;
+
+	}
+
+void checkForScore( GLfloat maxX , GLfloat minX ,GLfloat goalMinZ , GLfloat goalMaxZ ) {
+
+	if( puck->matTranslation[0][3] > maxX ) {
+
+		if( puck->matTranslation[2][3] > goalMinZ  && puck->matTranslation[2][3] < goalMaxZ ) {
+
+			score( 1 );
+
+			}
+
+		}
+
+	if( puck->matTranslation[0][3] < minX ) {
+
+		if( puck->matTranslation[2][3] > goalMinZ  && puck->matTranslation[2][3] < goalMaxZ ) {
+
+			score( 2 );
+
+			}
+
 		}
 
 	}
+
+void score( int player ) {
+
+	puck->matTranslation[0][3] = 0.0;
+	puck->matTranslation[2][3] = 0.0;
+
+	puck->vecVelocity[0] = 0.0;
+	puck->vecVelocity[2] = 0.0;
+
+	if( player == 1 )
+		player1Score += 1;
+
+	if( player == 2 )
+		player2Score += 1;
+
+	if( player1Score > 2 || player2Score > 2 )
+		gameOver();
+	else
+		glutTimerFunc( 2000 , nextPoint , 0 );
+
+	}
+
+void gameOver() {
+
+	//playing = false;
+
+	flyingStuff();
+
+	}
+
+void nextPoint( int x ) {
+
+	float vel = 0.06;
+
+	float angle =  2* 3.14159 * ( (rand() % 20000) / 20000.0 );
+
+	puck->vecVelocity[0] = vel * cos( angle );
+	puck->vecVelocity[2] = vel * sin( angle );
+
+	}
+
+void mainMenuCallback( int x ) {
+
+	if( x == MENU_NEW_GAME ) {
+
+		newGame();
+
+		}
+	else if( x == MENU_PAUSE_GAME ) {
+		if( playing )
+			playing = false;
+		else
+			playing = true;
+
+		}
+	else if( x == MENU_STOP_GAME ) {
+
+		resetGameboard();
+
+		playing = false;
+
+		}
+	else if( x == MENU_QUIT_GAME ) {
+
+		exit(0);
+
+		}
+
+	}
+
+void newGame() {
+
+	resetGameboard();
+
+	player1Score = 0;
+	player2Score = 0;
+
+	playing = true;
+
+	glutTimerFunc( 2000 , nextPoint , 0 );
+
+	}
+
+void flyingStuff() {
+
+	paddle1->vecAcceleration[1] = 0.003;
+
+	paddle2->vecAcceleration[1] = 0.003;
+
+	puck->vecAcceleration[1] = 0.003;
+
+	table->vecAcceleration[1] = -0.003;
+
+	}
+
+void resetGameboard() {
+	puck->matTranslation[0][3] = 0.0;
+	puck->matTranslation[2][3] = 0.0;
+
+	paddle1->matTranslation[0][3] = 3.0;
+	paddle1->matTranslation[2][3] = 0.0;
+
+	paddle2->matTranslation[0][3] = -3.0;
+	paddle2->matTranslation[2][3] = 0.0;
+
+	puck->vecVelocity[0] = 0.0;
+	puck->vecVelocity[2] = 0.0;
+
+	for( unsigned int i = 0 ; i < objectList.size() ; i++ ) {
+
+		objectList[i]->updatePosition();
+
+		}
+
+	glutPostRedisplay();
+}
