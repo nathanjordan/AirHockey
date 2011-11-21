@@ -40,8 +40,6 @@ Object::Object( ) {
 
 	vecVelocity = TVec3<GLfloat>( 0.0 , 0.0 , 0.0 );
 
-	vecAcceleration = TVec3<GLfloat>( 0.0 , 0.0 , 0.0 );
-
 	matTranslation = matTranslation.I();
 
 	matRotation = matRotation.I();
@@ -399,10 +397,6 @@ void Object::setColor( TVec4<GLfloat>* color ) {
 	}
 
 void Object::updatePosition() {
-
-	vecVelocity[0] += vecAcceleration[0];
-	vecVelocity[1] += vecAcceleration[1];
-	vecVelocity[2] += vecAcceleration[2];
 
 	matTranslation[0][3] += vecVelocity[0];
 	matTranslation[1][3] += vecVelocity[1];

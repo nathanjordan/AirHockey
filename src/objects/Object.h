@@ -51,7 +51,6 @@ public:
 	TVec4<GLfloat>* normalDrawList;
 
 	TVec3<GLfloat> vecVelocity;
-	TVec3<GLfloat> vecAcceleration;
 
 	TVec4<GLfloat>* vertices;
 	TVec4<GLfloat>* colors;
