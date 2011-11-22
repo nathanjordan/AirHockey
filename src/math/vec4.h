@@ -140,6 +140,12 @@ inline std::istream &operator>>(std::istream &in, TVec4<T>& v)
 //
 
 template<class T>
+inline TVec4<T> mul(const TVec4<T>& u, const TVec4<T>& v)
+{
+	return TVec4<T>( u[0]*v[0] , u[1]*v[1] , u[2]*v[2] , u[3]*v[3] );
+}
+
+template<class T>
 inline TVec4<T> cross(const TVec4<T>& a, const TVec4<T>& b, const TVec4<T>& c)
 {
     // Code adapted from VecLib4d.c in Graphics Gems V

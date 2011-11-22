@@ -22,6 +22,9 @@
 #include "objects/Object.h"
 #include "kixor/objLoader.h"
 
+
+
+
 char* parseGLSL( char* file );
 
 void initWindow();
@@ -76,22 +79,17 @@ void flyingStuff();
 
 void resetGameboard();
 
-GLuint program;
-GLuint vertexShader;
-GLuint fragmentShader;
-GLuint modelLocation;
-GLuint viewLocation;
-GLuint projectionLocation;
-GLuint colorLocation;
-GLuint vertexLocation;
+
+
+
+shaderloc program1;
 
 Object* puck;
 Object* paddle1;
 Object* paddle2;
 Object* table;
 
-Mat4 viewMatrix;
-Mat4 projMatrix;
+
 
 TVec3<GLfloat> eye;
 TVec3<GLfloat> at;
@@ -115,6 +113,22 @@ int MENU_NEW_GAME = 0;
 int MENU_STOP_GAME = 1;
 int MENU_PAUSE_GAME = 2;
 int MENU_QUIT_GAME = 3;
+
+
+
+
+color4 material_ambient( 1.0, 0.0, 1.0, 1.0 );
+color4 material_diffuse( 1.0, 0.8, 0.0, 1.0 );
+color4 material_specular( 1.0, 0.0, 1.0, 1.0 );
+float  material_shininess = 5.0;
+
+/*
+color4 ambient_product = light_ambient * material_ambient;
+color4 diffuse_product = light_diffuse * material_diffuse;
+color4 specular_product = light_specular * material_specular;
+*/
+
+
 
 int main() {
 
@@ -156,25 +170,33 @@ char* parseGLSL( char* file ) {
 
 void initShaders() {
 
-	vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	program = glCreateProgram();
+	//lighting variables
+	program1.light_position = point4( 1.0, 2.0, 0.0, 0.0 );
+	program1.light_ambient = color4( 0.9, 0.2, 0.2, 1.0 );
+	//program1.light_diffuse = color4( 1.0, 1.0, 1.0, 1.0 );
+	program1.light_diffuse = color4(0.6, 0.6, 0.0, 1.0 );
+	program1.light_specular = color4( 1.0, 0.0, 1.0, 1.0 );
+
+
+	program1.vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	program1.fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+	program1.program = glCreateProgram();
 
 	GLchar *vertexsource, *fragmentsource;
 
 	vertexsource = parseGLSL((char*)"/home/njordan/Downloads/workspace/AirHockey/src/shaders/shapes.vert");
 	fragmentsource = parseGLSL((char*)"/home/njordan/Downloads/workspace/AirHockey/src/shaders/shapes.frag");
 
-	glShaderSource( vertexShader , 1 , (const GLchar**)&vertexsource , NULL );
-	glShaderSource( fragmentShader , 1 , (const GLchar**)&fragmentsource , NULL );
+	glShaderSource( program1.vertexShader , 1 , (const GLchar**)&vertexsource , NULL );
+	glShaderSource( program1.fragmentShader , 1 , (const GLchar**)&fragmentsource , NULL );
 
-	glCompileShader( vertexShader );
-	glCompileShader( fragmentShader );
+	glCompileShader( program1.vertexShader );
+	glCompileShader( program1.fragmentShader );
 
 	int isCompiled_vertexShader;
 
 	//get the shader status from the vertex shader
-	glGetShaderiv( vertexShader , GL_COMPILE_STATUS, &isCompiled_vertexShader );
+	glGetShaderiv( program1.vertexShader , GL_COMPILE_STATUS, &isCompiled_vertexShader );
 
 	//if the vertex shader did not compile, get some info about why it didnt
 	if( ! (bool) isCompiled_vertexShader ) {
@@ -183,13 +205,13 @@ void initShaders() {
 		int maxLength,logLen;
 
 		//Get the shader logs length
-		glGetShaderiv( vertexShader , GL_INFO_LOG_LENGTH, &maxLength);
+		glGetShaderiv( program1.vertexShader , GL_INFO_LOG_LENGTH, &maxLength);
 
 		/* The maxLength includes the NULL character */
 		vertexInfoLog = (char *)malloc(maxLength);
 
 		//get the log info
-		glGetShaderInfoLog( vertexShader , maxLength , &logLen , vertexInfoLog );
+		glGetShaderInfoLog( program1.vertexShader , maxLength , &logLen , vertexInfoLog );
 
 		std::string log( vertexInfoLog , logLen );
 
@@ -203,7 +225,7 @@ void initShaders() {
 	int isCompiled_fragmentShader;
 
 	//get the shader status from the fragment shader
-	glGetShaderiv( fragmentShader , GL_COMPILE_STATUS, &isCompiled_fragmentShader );
+	glGetShaderiv( program1.fragmentShader , GL_COMPILE_STATUS, &isCompiled_fragmentShader );
 
 	//if the fragment shader did not compile, get some info about why it didnt
 	if( ! (bool) isCompiled_fragmentShader ) {
@@ -212,13 +234,13 @@ void initShaders() {
 		int maxLength,logLen;
 
 		//Get the shader logs length
-		glGetShaderiv(fragmentShader, GL_INFO_LOG_LENGTH, &maxLength);
+		glGetShaderiv(program1.fragmentShader, GL_INFO_LOG_LENGTH, &maxLength);
 
 		/* The maxLength includes the NULL character */
 		fragmentInfoLog = (char *)malloc(maxLength);
 
 		//get the log info
-		glGetShaderInfoLog( fragmentShader , maxLength , &logLen , fragmentInfoLog );
+		glGetShaderInfoLog( program1.fragmentShader , maxLength , &logLen , fragmentInfoLog );
 
 		std::string log( fragmentInfoLog , logLen );
 
@@ -229,14 +251,14 @@ void initShaders() {
 
 		}
 
-	glAttachShader( program , vertexShader );
-	glAttachShader( program , fragmentShader );
+	glAttachShader( program1.program , program1.vertexShader );
+	glAttachShader( program1.program , program1.fragmentShader );
 
-	glLinkProgram( program );
+	glLinkProgram( program1.program );
 
 	int isLinked;
 
-	glGetProgramiv( program , GL_LINK_STATUS , (int *)&isLinked );
+	glGetProgramiv( program1.program , GL_LINK_STATUS , (int *)&isLinked );
 
 	if( ! (bool) isLinked) {
 
@@ -244,13 +266,13 @@ void initShaders() {
 		int maxLength,logLen;
 
 		/* Noticed that glGetProgramiv is used to get the length for a shader program, not glGetShaderiv. */
-		glGetProgramiv( program, GL_INFO_LOG_LENGTH, &maxLength);
+		glGetProgramiv( program1.program, GL_INFO_LOG_LENGTH, &maxLength);
 
 		/* The maxLength includes the NULL character */
 		shaderProgramInfoLog = (char *)malloc(maxLength);
 
 		/* Notice that glGetProgramInfoLog, not glGetShaderInfoLog. */
-		glGetProgramInfoLog( program , maxLength, &logLen, shaderProgramInfoLog );
+		glGetProgramInfoLog( program1.program , maxLength, &logLen, shaderProgramInfoLog );
 
 		std::string log( shaderProgramInfoLog , logLen );
 
@@ -259,45 +281,38 @@ void initShaders() {
 		exit(1);
 		}
 
-	glUseProgram( program );
+	glUseProgram( program1.program );
 
-	modelLocation = glGetUniformLocation( program , "model" );
+	program1.modelLocation = glGetUniformLocation( program1.program , "model" );
 
-	viewLocation = glGetUniformLocation( program , "view" );
+	program1.viewLocation = glGetUniformLocation( program1.program , "view" );
 
-	projectionLocation = glGetUniformLocation( program , "projection" );
+	program1.projectionLocation = glGetUniformLocation( program1.program , "projection" );
 
-	vertexLocation = glGetAttribLocation( program , "vertex" );
+	program1.vertexLocation = glGetAttribLocation( program1.program , "vertex" );
 
-	colorLocation = glGetAttribLocation( program , "color" );
+	program1.normalLocation = glGetAttribLocation( program1.program , "normal" );
+
+	program1.ambientLocation = glGetUniformLocation(program1.program, "AmbientProduct");
+
+	program1.diffuseLocation = glGetUniformLocation(program1.program, "DiffuseProduct");
+
+	program1.specularLocation = glGetUniformLocation(program1.program, "SpecularProduct");
+
+	program1.lightLocation = glGetUniformLocation(program1.program, "LightPosition");
+
+	program1.shininessLocation = glGetUniformLocation(program1.program, "Shininess");
 
 	eye = TVec3<GLfloat>( 1.0 , 1.0 , 1.0 );
 
 	glOrtho( -5.0 , 5.0 , -5.0 , 5.0 , -10.0 , 10.0 );
 
-	//gluLookAt( 0.0 , 2.0 , 0.0 , 0.0 , 0.0 , 0.0 , -1.0 , 0.0 , 0.0 );
-
 	gluLookAt( 2.0 , 2.0 , 2.0 , 0.0 , 0.0 , 0.0 , 0.0 , 1.0 , 0.0 );
 
-	//glDisable(GL_LIGHTING);
+	glEnable(GL_LIGHTING);
 
-	/*glEnable(GL_LIGHTING);
-
-	glEnable(GL_LIGHT0);
-
-	GLfloat ambient[4] = { 0.2 , 0.2 , 0.2 , 1.0 };
-	GLfloat diffuse[4] = { 1.0 , 1.0 , 1.0 , 1.0 };
-	GLfloat specular[4] = { 1.0 , 1.0 , 1.0 , 1.0 };
-	GLfloat pos[4] = { 0.0 , 0.0 , -1.0 , 0.0 };
-
-	glLightfv(GL_LIGHT0, GL_AMBIENT, ambient );
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse );
-	glLightfv(GL_LIGHT0, GL_SPECULAR, specular );
-	glLightfv(GL_LIGHT0, GL_POSITION, pos );
-*/
     
-    
-    //clear the background to black
+    //clear the background to white
 	glClearColor(1.0, 1.0 , 1.0 , 1.0 );
     
 	}
@@ -415,8 +430,8 @@ void displayCallback() {
 	//draw all the shapes
 	for( unsigned int i = 0 ; i < objectList.size() ; i++ ) {
 
-		objectList[i]->draw( modelLocation , viewLocation, projectionLocation, vertexLocation, colorLocation , &viewMatrix , &projMatrix );
-
+		//objectList[i]->draw(modelLocation , viewLocation, projectionLocation, vertexLocation, colorLocation , &viewMatrix , &projMatrix );
+		objectList[i]->draw(program1);
 		}
 
 	//glutStrokeString( GLUT_STROKE_ROMAN , (unsigned char*) "text to render" );
@@ -577,6 +592,26 @@ void readVertices( char* filename , Object* object ) {
 
 void initObjects() {
 
+	material paddleColor, puckColor, tableColor;
+
+	//paddle color stuff
+	paddleColor.material_ambient = color4(0.4, 0.0, 0.0, 1.0);
+	paddleColor.material_diffuse = color4(0.8, 0.0, 0.0, 1.0);
+	paddleColor.material_specular = color4(1.0, 1.0, 1.0, 1.0);
+	paddleColor.material_shininess = 2.0;
+
+	//paddle color stuff
+	puckColor.material_ambient = color4(0.0, 0.0, 0.0, 1.0);
+	puckColor.material_diffuse = color4(0.2, 0.2, 0.2, 1.0);
+	puckColor.material_specular = color4(1.0, 1.0, 1.0, 1.0);
+	puckColor.material_shininess = 5.0;
+
+	//paddle color stuff
+	tableColor.material_ambient = color4(0.5, 0.5, 0.5, 1.0);
+	tableColor.material_diffuse = color4(0.8, 0.8, 0.8, 1.0);
+	tableColor.material_specular = color4(1.0, 1.0, 1.0, 1.0);
+	tableColor.material_shininess = 5.0;
+
 	table = new Object();
 
 	puck = new Object();
@@ -601,21 +636,13 @@ void initObjects() {
 
 	objectList.push_back( paddle2 );
 
-	TVec4<GLfloat> white = TVec4<GLfloat>( 1.0 , 1.0 , 1.0 , 1.0 );
+	puck->setColor( puckColor );
 
-	TVec4<GLfloat> red = TVec4<GLfloat>( 1.0 , 0.0 , 0.0 , 1.0 );
+	table->setColor( tableColor );
 
-	TVec4<GLfloat> black = TVec4<GLfloat>( 0.0 , 0.0 , 0.0 , 1.0 );
+	paddle1->setColor( paddleColor );
 
-	TVec4<GLfloat> gray = TVec4<GLfloat>( 0.6 , 0.6 , 0.6 , 1.0 );
-
-	puck->setColor( &black );
-
-	table->setColor( &gray );
-
-	paddle1->setColor( &red );
-
-	paddle2->setColor( &red );
+	paddle2->setColor( paddleColor );
 
 	puck->vecVelocity[0] = 0.02;
 
@@ -685,14 +712,14 @@ void initView() {
 	TVec4<GLfloat> c = TVec4<GLfloat>( 0.577 , 0.577 , 0.577 , -17.3205 );
 	TVec4<GLfloat> d = TVec4<GLfloat>( 0.0 , 0.0 , 0.0 , 1.0 );
 
-	viewMatrix = Mat4( a,b,c,d );
+	program1.viewMatrix = Mat4( a,b,c,d );
 
 	a = TVec4<GLfloat>( 0.5 , 0.0 , 0.0 , 0.0 );
 	b = TVec4<GLfloat>( 0.0 , 0.5 , 0.0 , 0.0 );
 	c = TVec4<GLfloat>( 0.0 , 0.0 , -0.5 , 0.0 );
 	d = TVec4<GLfloat>( 0.0 , 0.0 , 0.0 , 1.0 );
 
-	projMatrix = Mat4( a,b,c,d );
+	program1.projMatrix = Mat4( a,b,c,d );
 
 	}
 
@@ -964,6 +991,7 @@ void flyingStuff() {
 	}
 
 void resetGameboard() {
+
 	puck->matTranslation[0][3] = 0.0;
 	puck->matTranslation[2][3] = 0.0;
 

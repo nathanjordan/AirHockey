@@ -161,7 +161,11 @@ Object& Object::operator=( const Object& right ) {
 
 	}
 
-void Object::draw( GLuint modelLocation, GLuint viewLocation, GLuint projectionLocation, GLuint vertexLocation, GLuint colorLocation , Mat4* viewMatrix, Mat4* projMatrix) {
+void Object::draw( shaderloc &prog) {
+
+	color4 ambient_product = mul( prog.light_ambient , colorAttributes.material_ambient);
+	color4 diffuse_product = mul( prog.light_diffuse , colorAttributes.material_diffuse);
+	color4 specular_product = mul( prog.light_specular , colorAttributes.material_specular);
 
 	GLfloat* tempVertices = new GLfloat[ numFaces * 3 * 4];
 
@@ -211,29 +215,39 @@ void Object::draw( GLuint modelLocation, GLuint viewLocation, GLuint projectionL
 	glBufferData( GL_ARRAY_BUFFER , numFaces * 3 * 4 * sizeof(GLfloat) , tempVertices , GL_STATIC_DRAW );
 
 	// Specify that our coordinate data is going into attribute index 0, and contains two floats per vertex
-	glVertexAttribPointer( vertexLocation , 4 , GL_FLOAT , GL_FALSE , 0 , 0 );
+	glVertexAttribPointer( prog.vertexLocation , 4 , GL_FLOAT , GL_FALSE , 0 , 0 );
 
 	// Enable attribute index 0 as being used
-	glEnableVertexAttribArray( vertexLocation );
+	glEnableVertexAttribArray( prog.vertexLocation );
 
-	//Bind our second VBO as being the active buffer and storing vertex attributes (colors)
+	//Bind our second VBO as being the active buffer and storing vertex attributes (normals)
 	glBindBuffer( GL_ARRAY_BUFFER , vbo[1] );
 
 	// Copy the color data from colors to our buffer
 	// 12 * sizeof(GLfloat) is the size of the colors array, since it contains 12 GLfloat values
-	glBufferData( GL_ARRAY_BUFFER , numFaces * 3 * 4 * sizeof(GLfloat) , tempColors , GL_STATIC_DRAW );
+	glBufferData( GL_ARRAY_BUFFER , numFaces * 3 * 4 * sizeof(GLfloat) , tempNormals , GL_STATIC_DRAW );
 
 	// Specify that our color data is going into attribute index 1, and contains three floats per vertex
-	glVertexAttribPointer( colorLocation , 4 , GL_FLOAT, GL_FALSE, 0, 0);
+	glVertexAttribPointer( prog.normalLocation , 4 , GL_FLOAT, GL_FALSE, 0, 0);
 
 	// Enable attribute index 1 as being used
-	glEnableVertexAttribArray( colorLocation );
+	glEnableVertexAttribArray( prog.normalLocation );
 
-	glUniformMatrix4fv( modelLocation , 1 , true , matModel );
+	glUniformMatrix4fv( prog.modelLocation , 1 , true , matModel );
 
-	glUniformMatrix4fv( viewLocation, 1 , true , *viewMatrix );
+	glUniformMatrix4fv( prog.viewLocation, 1 , true , prog.viewMatrix );
 
-	glUniformMatrix4fv( projectionLocation, 1 , true , *projMatrix );
+	glUniformMatrix4fv( prog.projectionLocation, 1 , true , prog.projMatrix );
+
+	glUniform4fv( prog.ambientLocation, 1, ambient_product );
+
+	glUniform4fv( prog.diffuseLocation, 1, diffuse_product );
+
+	glUniform4fv( prog.specularLocation, 1, specular_product );
+
+	glUniform4fv( prog.lightLocation, 1, prog.light_position );
+
+	glUniform1f( prog.shininessLocation, colorAttributes.material_shininess );
 
 	glDrawArrays( GL_TRIANGLES, 0 , numFaces * 3 );
 
@@ -382,8 +396,14 @@ void Object::setFaces( objLoader* loader ) {
 
 	}
 
-void Object::setColor( TVec4<GLfloat>* color ) {
+void Object::setColor( material &colorStuff ) {
 
+	colorAttributes.material_ambient = colorStuff.material_ambient;
+	colorAttributes.material_diffuse = colorStuff.material_diffuse;
+	colorAttributes.material_specular = colorStuff.material_specular;
+	colorAttributes.material_shininess = colorStuff.material_shininess;
+
+	/*
 	for( int i = 0 ; i < numVertices ; i++ ) {
 
 		colors[i] = *color;
@@ -395,6 +415,7 @@ void Object::setColor( TVec4<GLfloat>* color ) {
 		colorDrawList[i] = *color;
 
 		}
+		*/
 
 	}
 

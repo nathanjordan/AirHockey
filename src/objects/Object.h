@@ -22,10 +22,52 @@
 #include <vector>
 #include "../kixor/objLoader.h"
 
+
+typedef TVec4<GLfloat> point4;
+typedef TVec4<GLfloat> color4;
+
+//struct stuff
+
+struct shaderloc {
+	GLuint program;
+	GLuint vertexShader;
+	GLuint fragmentShader;
+	GLuint modelLocation;
+	GLuint viewLocation;
+	GLuint projectionLocation;
+	GLuint normalLocation;
+	GLuint vertexLocation;
+	GLuint ambientLocation;
+	GLuint diffuseLocation;
+	GLuint specularLocation;
+	GLuint lightLocation;
+	GLuint shininessLocation;
+
+	//lighting variables
+	point4 light_position;
+	color4 light_ambient;
+	color4 light_diffuse;
+	color4 light_specular;
+
+	//matrixes
+	Mat4 viewMatrix;
+	Mat4 projMatrix;
+	};
+
+struct material {
+	color4 material_ambient;
+	color4 material_diffuse;
+	color4 material_specular;
+	float material_shininess;
+
+};
+
 struct face {
 			int vertIndices[3];
 			int normalIndices[3];
 			};
+
+
 
 class Object {
 
@@ -35,10 +77,10 @@ public:
 	Object(const Object&);
 	virtual ~Object();
 	Object& operator=(const Object& right );
-	void draw( GLuint modelLocation, GLuint viewLocation, GLuint, GLuint vertexLocation, GLuint colorLocation , Mat4* , Mat4*);
+	void draw( shaderloc&);
 	void setFaces( objLoader* loader );
 	void rotate( float , float , float );
-	void setColor( TVec4<GLfloat>* );
+	void setColor( material& );
 	void updatePosition();
 
 	Mat4 matTranslation;
@@ -56,6 +98,8 @@ public:
 	TVec4<GLfloat>* vertices;
 	TVec4<GLfloat>* colors;
 	TVec4<GLfloat>* normals;
+
+	material colorAttributes;
 
 	bool isConstrained;
 	GLfloat constraints[4];
