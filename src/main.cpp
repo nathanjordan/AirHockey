@@ -115,21 +115,6 @@ int MENU_PAUSE_GAME = 2;
 int MENU_QUIT_GAME = 3;
 
 
-
-
-color4 material_ambient( 1.0, 0.0, 1.0, 1.0 );
-color4 material_diffuse( 1.0, 0.8, 0.0, 1.0 );
-color4 material_specular( 1.0, 0.0, 1.0, 1.0 );
-float  material_shininess = 5.0;
-
-/*
-color4 ambient_product = light_ambient * material_ambient;
-color4 diffuse_product = light_diffuse * material_diffuse;
-color4 specular_product = light_specular * material_specular;
-*/
-
-
-
 int main() {
 
 	srand( time( NULL ) );
@@ -171,11 +156,11 @@ char* parseGLSL( char* file ) {
 void initShaders() {
 
 	//lighting variables
-	program1.light_position = point4( 1.0, 2.0, 0.0, 0.0 );
-	program1.light_ambient = color4( 0.9, 0.2, 0.2, 1.0 );
+	program1.light_position = point4( -5.0, 5.0, -5.0, 0.0 );
+	program1.light_ambient = color4( 0.2, 0.2, 0.2, 1.0 );
 	//program1.light_diffuse = color4( 1.0, 1.0, 1.0, 1.0 );
-	program1.light_diffuse = color4(0.6, 0.6, 0.0, 1.0 );
-	program1.light_specular = color4( 1.0, 0.0, 1.0, 1.0 );
+	program1.light_diffuse = color4(1.0, 1.0, 1.0, 1.0 );
+	program1.light_specular = color4( 1.0, 1.0, 1.0, 1.0 );
 
 
 	program1.vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -311,6 +296,7 @@ void initShaders() {
 
 	glEnable(GL_LIGHTING);
 
+	glEnable( GL_DEPTH_TEST );
     
     //clear the background to white
 	glClearColor(1.0, 1.0 , 1.0 , 1.0 );
@@ -598,19 +584,19 @@ void initObjects() {
 	paddleColor.material_ambient = color4(0.4, 0.0, 0.0, 1.0);
 	paddleColor.material_diffuse = color4(0.8, 0.0, 0.0, 1.0);
 	paddleColor.material_specular = color4(1.0, 1.0, 1.0, 1.0);
-	paddleColor.material_shininess = 2.0;
+	paddleColor.material_shininess = 30.0;
 
-	//paddle color stuff
+	//puck color stuff
 	puckColor.material_ambient = color4(0.0, 0.0, 0.0, 1.0);
 	puckColor.material_diffuse = color4(0.2, 0.2, 0.2, 1.0);
 	puckColor.material_specular = color4(1.0, 1.0, 1.0, 1.0);
-	puckColor.material_shininess = 5.0;
+	puckColor.material_shininess = 30.0;
 
-	//paddle color stuff
-	tableColor.material_ambient = color4(0.5, 0.5, 0.5, 1.0);
+	//table color stuff
+	tableColor.material_ambient = color4(0.3, 0.3, 0.3, 1.0);
 	tableColor.material_diffuse = color4(0.8, 0.8, 0.8, 1.0);
 	tableColor.material_specular = color4(1.0, 1.0, 1.0, 1.0);
-	tableColor.material_shininess = 5.0;
+	tableColor.material_shininess = 30.0;
 
 	table = new Object();
 
