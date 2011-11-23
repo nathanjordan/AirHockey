@@ -6,7 +6,7 @@ uniform mat4 projection;
 
 in vec4 vertex;
 in vec4 normal;
-//in vec4 color;
+in vec2 vTexCoord;
 
 // lighting stuff
 varying  vec3 fN;
@@ -14,7 +14,7 @@ varying  vec3 fE;
 varying  vec3 fL;
 uniform vec4 LightPosition;
 
-//varying vec4 fColor;
+varying vec2 texCoord;
 
 void main() {
 
@@ -30,11 +30,11 @@ void main() {
 		fL = LightPosition.xyz - vertex.xyz;
     }
 
-
-	//fColor = color;
 	
 	//gl_Position =  projection * view * model * vertex;
 	
 	gl_Position = gl_ModelViewProjectionMatrix * model * vertex;
+	
+	texCoord    = vTexCoord;
 	
 	}

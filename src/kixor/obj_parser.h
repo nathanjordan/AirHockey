@@ -8,7 +8,7 @@
 #define OBJ_LINE_SIZE 500
 #define MAX_VERTEX_COUNT 4 //can only handle quads or triangles
 
-typedef struct obj_face
+struct obj_face
 {
 	int vertex_index[MAX_VERTEX_COUNT];
 	int normal_index[MAX_VERTEX_COUNT];

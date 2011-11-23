@@ -8,11 +8,29 @@
 #include "Object.h"
 #include <limits>
 
-Object::Object( ) {
+Object::Object( bool stuff ) {
 	
-	glGenBuffers( 2, vbo );
+	glGenBuffers( 3, vbo );
+
+	glGenTextures(1, textures);
 
 	glGenVertexArrays( 1, &vao );
+
+	//texturing stuff
+	// texture data
+
+	// allocate buffer
+	colorAttributes.data = new unsigned char[ TextureSize * TextureSize * 3 ];
+	char filename[] = {"/home/nitish/Desktop/AirHockey/wood.raw"};
+
+	FILE * file;
+
+	// open and read texture data
+	file = fopen( filename, "rb" );
+	fread( colorAttributes.data, TextureSize * TextureSize * 3, 1, file );
+	fclose( file );
+
+	colorAttributes.texturized = stuff;
 
 	numVertices = 0;
 
@@ -98,6 +116,7 @@ Object::Object( const Object& right ) {
 
         this->depth = right.depth;
 
+        colorAttributes = right.colorAttributes;
 
 	}
 
@@ -169,6 +188,7 @@ void Object::draw( shaderloc &prog) {
 
 	GLfloat* tempVertices = new GLfloat[ numFaces * 3 * 4];
 
+
 	for( int i = 0 ; i < numFaces * 3 ; i++ ) {
 
 		for( int j = 0 ; j < 4 ; j++ ) {
@@ -178,6 +198,16 @@ void Object::draw( shaderloc &prog) {
 			}
 
 		}
+
+	TVec2<GLfloat>* tempTexils = new TVec2<GLfloat>[numFaces * 3];
+	for( int i = 0; i< numFaces * 3; i+=6) {
+		tempTexils[i] = point2(0.0, 0.0);
+		tempTexils[i+1] = point2(0.0, 1.0);
+		tempTexils[i+2] =point2(1.0, 1.0);
+		tempTexils[i+3] = point2(0.0, 0.0);
+		tempTexils[i+4] = point2(1.0, 1.0);
+		tempTexils[i+5] =point2(1.0, 0.0);
+	}
 
 	GLfloat* tempColors = new GLfloat[ numFaces * 3 * 4];
 
@@ -205,7 +235,31 @@ void Object::draw( shaderloc &prog) {
 
 	matModel = matTranslation * matScale * matRotation;
 
+
+
+	if( colorAttributes.texturized) {
+
+		//texturing stuff
+		glBindTexture(GL_TEXTURE_2D, textures[0]);
+
+		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, TextureSize, TextureSize, 0, GL_RGB, GL_UNSIGNED_BYTE, colorAttributes.data );
+
+		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+
+		//glActiveTexture( GL_TEXTURE0 );
+
+
+
+
+
+	}
+
+
 	glBindVertexArray( vao );
+
 
 	// Bind our first VBO as being the active buffer and storing vertex attributes (coordinates)
 	glBindBuffer( GL_ARRAY_BUFFER, vbo[0] );
@@ -233,6 +287,30 @@ void Object::draw( shaderloc &prog) {
 	// Enable attribute index 1 as being used
 	glEnableVertexAttribArray( prog.normalLocation );
 
+	if(colorAttributes.texturized) {
+
+
+			// Bind our first VBO as being the active buffer and storing vertex attributes (coordinates)
+			glBindBuffer( GL_ARRAY_BUFFER, vbo[2] );
+
+			// Copy the vertex data from diamond to our buffer
+			// 8 * sizeof(GLfloat) is the size of the diamond array, since it contains 8 GLfloat values
+			glBufferData( GL_ARRAY_BUFFER , numFaces * 3 * 2 * sizeof(GLfloat) , tempTexils , GL_STATIC_DRAW );
+
+			glEnableVertexAttribArray( prog.vTextCoordLocation );
+
+			glVertexAttribPointer( prog.vTextCoordLocation, 2, GL_FLOAT, GL_FALSE, 0, 0 );
+
+
+			/*
+			// Specify that our coordinate data is going into attribute index 0, and contains two floats per vertex
+			glVertexAttribPointer( prog.textureLocation , 4 , GL_FLOAT , GL_FALSE , 0 , 0 );
+
+			// Enable attribute index 0 as being used
+			glEnableVertexAttribArray( prog.textureLocation );
+	*/
+	}
+
 	glUniformMatrix4fv( prog.modelLocation , 1 , true , matModel );
 
 	glUniformMatrix4fv( prog.viewLocation, 1 , true , prog.viewMatrix );
@@ -248,6 +326,10 @@ void Object::draw( shaderloc &prog) {
 	glUniform4fv( prog.lightLocation, 1, prog.light_position );
 
 	glUniform1f( prog.shininessLocation, colorAttributes.material_shininess );
+
+	if (colorAttributes.texturized)
+		glUniform1i( prog.textureLocation, 0 );
+
 
 	glDrawArrays( GL_TRIANGLES, 0 , numFaces * 3 );
 

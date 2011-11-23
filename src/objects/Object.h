@@ -24,7 +24,10 @@
 
 
 typedef TVec4<GLfloat> point4;
+typedef TVec2<GLfloat> point2;
 typedef TVec4<GLfloat> color4;
+
+const int TextureSize = 512;
 
 //struct stuff
 
@@ -49,6 +52,10 @@ struct shaderloc {
 	color4 light_diffuse;
 	color4 light_specular;
 
+	//texture locations
+	GLuint vTextCoordLocation;
+	GLuint textureLocation;
+
 	//matrixes
 	Mat4 viewMatrix;
 	Mat4 projMatrix;
@@ -60,6 +67,43 @@ struct material {
 	color4 material_specular;
 	float material_shininess;
 
+	unsigned char *data;
+
+	bool texturized;
+/*
+	material(const material &rhs) {
+		material_ambient = rhs.material_ambient;
+		material_diffuse = rhs.material_diffuse;
+		material_shininess = rhs.material_shininess;
+		material_specular = rhs.material_specular;
+
+		data = new unsigned char [TextureSize*TextureSize*3];
+
+		for(int i=0; i< TextureSize*TextureSize*3; i++)
+			data[i] = rhs.data[i];
+
+		texturized = rhs.texturized;
+	}
+*/
+
+
+	material &operator=(const material &rhs) {
+		if (this != &rhs){
+			material_ambient = rhs.material_ambient;
+			material_diffuse = rhs.material_diffuse;
+			material_shininess = rhs.material_shininess;
+			material_specular = rhs.material_specular;
+
+			delete [] data;
+			data = new unsigned char [TextureSize*TextureSize*3];
+
+			for(int i=0; i< TextureSize*TextureSize*3; i++)
+				data[i] = rhs.data[i];
+
+			texturized = rhs.texturized;
+		}
+		return *this;
+	}
 };
 
 struct face {
@@ -73,7 +117,7 @@ class Object {
 
 public:
 
-	Object();
+	Object(bool stuff=false);
 	Object(const Object&);
 	virtual ~Object();
 	Object& operator=(const Object& right );
@@ -112,7 +156,8 @@ public:
 
 protected:
 
-	GLuint vao, vbo[2];
+	GLuint vao, vbo[3];
+	GLuint textures[1];
 
 	};
 

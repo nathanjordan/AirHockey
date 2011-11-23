@@ -115,6 +115,8 @@ int MENU_PAUSE_GAME = 2;
 int MENU_QUIT_GAME = 3;
 
 
+
+
 int main() {
 
 	srand( time( NULL ) );
@@ -158,7 +160,6 @@ void initShaders() {
 	//lighting variables
 	program1.light_position = point4( -5.0, 5.0, -5.0, 0.0 );
 	program1.light_ambient = color4( 0.2, 0.2, 0.2, 1.0 );
-	//program1.light_diffuse = color4( 1.0, 1.0, 1.0, 1.0 );
 	program1.light_diffuse = color4(1.0, 1.0, 1.0, 1.0 );
 	program1.light_specular = color4( 1.0, 1.0, 1.0, 1.0 );
 
@@ -288,6 +289,10 @@ void initShaders() {
 
 	program1.shininessLocation = glGetUniformLocation(program1.program, "Shininess");
 
+	program1.vTextCoordLocation = glGetAttribLocation(program1.program, "vTexCoord");
+
+	program1.textureLocation = glGetUniformLocation(program1.program, "texture");
+
 	eye = TVec3<GLfloat>( 1.0 , 1.0 , 1.0 );
 
 	glOrtho( -5.0 , 5.0 , -5.0 , 5.0 , -10.0 , 10.0 );
@@ -298,6 +303,16 @@ void initShaders() {
 
 	glEnable( GL_DEPTH_TEST );
     
+	//enable texturing
+
+
+
+
+
+
+
+
+
     //clear the background to white
 	glClearColor(1.0, 1.0 , 1.0 , 1.0 );
     
@@ -416,7 +431,7 @@ void displayCallback() {
 	//draw all the shapes
 	for( unsigned int i = 0 ; i < objectList.size() ; i++ ) {
 
-		//objectList[i]->draw(modelLocation , viewLocation, projectionLocation, vertexLocation, colorLocation , &viewMatrix , &projMatrix );
+
 		objectList[i]->draw(program1);
 		}
 
@@ -593,12 +608,13 @@ void initObjects() {
 	puckColor.material_shininess = 30.0;
 
 	//table color stuff
-	tableColor.material_ambient = color4(0.3, 0.3, 0.3, 1.0);
+	tableColor.material_ambient = color4(0.99, 0.99, 0.99, 1.0);
 	tableColor.material_diffuse = color4(0.8, 0.8, 0.8, 1.0);
 	tableColor.material_specular = color4(1.0, 1.0, 1.0, 1.0);
-	tableColor.material_shininess = 30.0;
+	tableColor.material_shininess = 5.0;
 
-	table = new Object();
+	//parameter indicated that there is a texture
+	table = new Object(true);
 
 	puck = new Object();
 
