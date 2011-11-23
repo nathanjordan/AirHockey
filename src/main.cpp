@@ -39,6 +39,8 @@ void initView();
 
 void initMenu();
 
+void initSound();
+
 void mouseMoveHandler(int x, int y);
 
 void mouseButtonHandler( int button, int state, int x, int y);
@@ -124,12 +126,22 @@ int MENU_QUIT_GAME = 3;
 
 string file = "/home/nitish/Desktop/AirHockey/src/Scores/top10.txt";
 
+// OpenAL Constants
+#define NUM_BUFFERS 2
+#define NUM_SOURCES 2
+#define NUM_ENVIRONMENTS 1
+
+//Buffers for OpenAL sound data
+ALuint alsource[NUM_SOURCES];
+ALuint albuffers[NUM_BUFFERS];
 
 int main() {
 
 	srand( time( NULL ) );
 
 	initWindow();
+
+	initSound();
 
 	initShaders();
 
@@ -861,6 +873,10 @@ bool checkCollisions() {
 
 		puck->vecVelocity[2] = vX + vXp;
 
+		alSourcef(alsource[0], AL_PITCH , 1.0 );
+
+		alSourcePlay(alsource[1]);
+
 		return true;
 		}
 
@@ -888,7 +904,12 @@ bool checkCollisions() {
 
 		puck->vecVelocity[2] = vX + vXp;
 
+		alSourcef(alsource[0], AL_PITCH , 1.0 );
+
+		alSourcePlay(alsource[1]);
+
 		return true;
+
 
 		}
 
@@ -903,7 +924,8 @@ void checkForScore( GLfloat maxX , GLfloat minX ,GLfloat goalMinZ , GLfloat goal
 		if( puck->matTranslation[2][3] > goalMinZ  && puck->matTranslation[2][3] < goalMaxZ ) {
 
 			score( 1 );
-
+			alSourcef(alsource[0], AL_PITCH , 1.0 );
+			alSourcePlay(alsource[0]);
 			}
 
 		}
@@ -913,7 +935,8 @@ void checkForScore( GLfloat maxX , GLfloat minX ,GLfloat goalMinZ , GLfloat goal
 		if( puck->matTranslation[2][3] > goalMinZ  && puck->matTranslation[2][3] < goalMaxZ ) {
 
 			score( 2 );
-
+			alSourcef(alsource[0], AL_PITCH , 1.0 );
+			alSourcePlay(alsource[0]);
 			}
 
 		}
@@ -975,8 +998,6 @@ void top10Check(int index) {
 
 	if(fin.good()) {
 		fin >> num;
-
-
 
 		for(int i=0; i<num; i++)
 			fin >> player[i] >> win[i];
@@ -1135,4 +1156,105 @@ void resetGameboard() {
 		}
 
 	glutPostRedisplay();
+}
+
+void initSound() {
+	alutInit(0, NULL);
+	alGetError();
+
+	ALenum     format;
+	ALsizei    size;
+	ALsizei    freq;
+	ALboolean  loop = true;;
+
+	ALvoid*    data;
+	ALenum 		error;
+
+	// Create the buffers
+	alGenBuffers(NUM_BUFFERS, albuffers);
+	if ((error = alGetError()) != AL_NO_ERROR) {
+
+		printf("alGenBuffers : %d", error);
+
+		}
+
+	alutLoadWAVFile( (ALbyte*) "/home/nitish/Desktop/AirHockey/src/sounds/goal.wav" , &format, &data, &size, &freq, &loop);
+
+	if ((error = alGetError()) != AL_NO_ERROR) {
+		printf("alutLoadWAVFile exciting_sound.wav : %d", error);
+		// Delete Buffers
+		alDeleteBuffers(NUM_BUFFERS, albuffers);
+		}
+
+	alBufferData(albuffers[0],format,data,size,freq);
+	if ((error = alGetError()) != AL_NO_ERROR) {
+		printf("alBufferData buffer 0 : %d", error);
+		// Delete buffers
+		alDeleteBuffers(NUM_BUFFERS, albuffers);
+		}
+
+	alutUnloadWAV(format,data,size,freq);
+	if ((error = alGetError()) != AL_NO_ERROR) {
+		printf("alutUnloadWAV : %d", error);
+		// Delete buffers
+		alDeleteBuffers(NUM_BUFFERS, albuffers);
+		}
+
+	alutLoadWAVFile( (ALbyte*) "/home/nitish/Desktop/AirHockey/src/sounds/hockeystick.wav" , &format, &data, &size, &freq, &loop);
+
+	if ((error = alGetError()) != AL_NO_ERROR) {
+		printf("alutLoadWAVFile exciting_sound.wav : %d", error);
+		// Delete Buffers
+		alDeleteBuffers(NUM_BUFFERS, albuffers);
+		}
+
+	alBufferData(albuffers[1],format,data,size,freq);
+	if ((error = alGetError()) != AL_NO_ERROR) {
+		printf("alBufferData buffer 0 : %d", error);
+		// Delete buffers
+		alDeleteBuffers(NUM_BUFFERS, albuffers);
+		}
+
+	alutUnloadWAV(format,data,size,freq);
+	if ((error = alGetError()) != AL_NO_ERROR) {
+		printf("alutUnloadWAV : %d", error);
+		// Delete buffers
+		alDeleteBuffers(NUM_BUFFERS, albuffers);
+		}
+
+
+	// Generate the sources
+	alGenSources(NUM_SOURCES, alsource);
+	if ((error = alGetError()) != AL_NO_ERROR) {
+		printf("alGenSources : %d", error);
+		}
+
+	alSourcei(alsource[0], AL_BUFFER, albuffers[0]);
+	if ((error = alGetError()) != AL_NO_ERROR) {
+		printf("alSourcei : %d", error);
+		}
+
+	alSourcei(alsource[1], AL_BUFFER, albuffers[1]);
+	if ((error = alGetError()) != AL_NO_ERROR) {
+		printf("alSourcei : %d", error);
+		}
+
+	ALfloat listenerPos[]={0.0,0.0,4.0};
+	ALfloat listenerVel[]={0.0,0.0,0.0};
+	ALfloat listenerOri[]={0.0,0.0,1.0, 0.0,1.0,0.0};
+
+	ALfloat source0Pos[]={ -2.0, 0.0, 0.0};
+	ALfloat source0Vel[]={ 0.0, 0.0, 0.0};
+
+	alSourcefv(alsource[0], AL_POSITION, source0Pos);
+	alSourcefv (alsource[0], AL_VELOCITY, source0Vel);
+	alSourcef(alsource[0], AL_PITCH , 1.0 );
+
+	alSourcefv(alsource[1], AL_POSITION, source0Pos);
+	alSourcefv (alsource[1], AL_VELOCITY, source0Vel);
+	alSourcef(alsource[1], AL_PITCH , 1.0 );
+
+	alListenerfv(AL_POSITION,listenerPos);
+	alListenerfv(AL_VELOCITY,listenerVel);
+	alListenerfv(AL_ORIENTATION,listenerOri);
 }

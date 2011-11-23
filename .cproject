@@ -33,8 +33,9 @@
 </tool>
 <tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.509861145" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug"/>
 <tool id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.1614958045" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug">
-<option id="gnu.cpp.link.option.libs.1371630253" superClass="gnu.cpp.link.option.libs" valueType="libs">
+<option id="gnu.cpp.link.option.libs.1371630253" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 <listOptionValue builtIn="false" value="GLEW"/>
+<listOptionValue builtIn="false" value="alut"/>
 <listOptionValue builtIn="false" value="glut"/>
 </option>
 <inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1728966545" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
