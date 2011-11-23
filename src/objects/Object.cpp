@@ -302,13 +302,6 @@ void Object::draw( shaderloc &prog) {
 			glVertexAttribPointer( prog.vTextCoordLocation, 2, GL_FLOAT, GL_FALSE, 0, 0 );
 
 
-			/*
-			// Specify that our coordinate data is going into attribute index 0, and contains two floats per vertex
-			glVertexAttribPointer( prog.textureLocation , 4 , GL_FLOAT , GL_FALSE , 0 , 0 );
-
-			// Enable attribute index 0 as being used
-			glEnableVertexAttribArray( prog.textureLocation );
-	*/
 	}
 
 	glUniformMatrix4fv( prog.modelLocation , 1 , true , matModel );

@@ -70,22 +70,6 @@ struct material {
 	unsigned char *data;
 
 	bool texturized;
-/*
-	material(const material &rhs) {
-		material_ambient = rhs.material_ambient;
-		material_diffuse = rhs.material_diffuse;
-		material_shininess = rhs.material_shininess;
-		material_specular = rhs.material_specular;
-
-		data = new unsigned char [TextureSize*TextureSize*3];
-
-		for(int i=0; i< TextureSize*TextureSize*3; i++)
-			data[i] = rhs.data[i];
-
-		texturized = rhs.texturized;
-	}
-*/
-
 
 	material &operator=(const material &rhs) {
 		if (this != &rhs){

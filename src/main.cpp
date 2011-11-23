@@ -302,14 +302,6 @@ void initShaders() {
 	glEnable(GL_LIGHTING);
 
 	glEnable( GL_DEPTH_TEST );
-    
-	//enable texturing
-
-
-
-
-
-
 
 
 
@@ -459,6 +451,10 @@ void keyboardHandler(unsigned char key , int x , int y ) {
 		updateViewMatrix();
 
 		}
+
+	else if (key == 033 || key == 'q') {
+		exit(EXIT_SUCCESS);
+	}
 
 	}
 void specialHandler( int key , int x , int y ) {
