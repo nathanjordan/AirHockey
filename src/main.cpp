@@ -169,8 +169,8 @@ void initShaders() {
 
 	GLchar *vertexsource, *fragmentsource;
 
-	vertexsource = parseGLSL((char*)"/home/njordan/Downloads/workspace/AirHockey/src/shaders/shapes.vert");
-	fragmentsource = parseGLSL((char*)"/home/njordan/Downloads/workspace/AirHockey/src/shaders/shapes.frag");
+	vertexsource = parseGLSL((char*)"/home/nitish/Desktop/AirHockey/src/shaders/shapes.vert");
+	fragmentsource = parseGLSL((char*)"/home/nitish/Desktop/AirHockey/src/shaders/shapes.frag");
 
 	glShaderSource( program1.vertexShader , 1 , (const GLchar**)&vertexsource , NULL );
 	glShaderSource( program1.fragmentShader , 1 , (const GLchar**)&fragmentsource , NULL );
@@ -606,19 +606,19 @@ void initObjects() {
 
 	paddle2 = new Object();
 
-	readVertices( (char*) "/home/njordan/Desktop/table.obj" , table );
+	readVertices( (char*) "/home/nitish/Desktop/table.obj" , table );
 
 	objectList.push_back( table );
 
-	readVertices( (char*) "/home/njordan/Desktop/puck.obj" , puck );
+	readVertices( (char*) "/home/nitish/Desktop/puck.obj" , puck );
 
 	objectList.push_back( puck );
 
-	readVertices( (char*) "/home/njordan/Desktop/paddle.obj" , paddle1 );
+	readVertices( (char*) "/home/nitish/Desktop/paddle.obj" , paddle1 );
 
 	objectList.push_back( paddle1 );
 
-	readVertices( (char*) "/home/njordan/Desktop/paddle.obj" , paddle2 );
+	readVertices( (char*) "/home/nitish/Desktop/paddle.obj" , paddle2 );
 
 	objectList.push_back( paddle2 );
 
