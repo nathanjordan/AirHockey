@@ -8,6 +8,7 @@
 #include <vector>
 #include <fstream>
 #include <math.h>
+#include <string.h>
 
 //OpenGL
 #include <GL/glew.h>
@@ -22,6 +23,7 @@
 #include "objects/Object.h"
 #include "kixor/objLoader.h"
 
+using namespace std;
 
 
 
@@ -67,9 +69,11 @@ void physicsTimer( int x );
 
 void score( int player );
 
+void top10Check(int);
+
 void checkForScore( GLfloat maxX , GLfloat minX ,GLfloat goalMinZ , GLfloat goalMaxZ );
 
-void gameOver();
+void gameOver(int);
 
 void nextPoint( int x );
 
@@ -118,7 +122,7 @@ int MENU_STOP_GAME = 1;
 int MENU_PAUSE_GAME = 2;
 int MENU_QUIT_GAME = 3;
 
-
+string file = "/home/nitish/Desktop/AirHockey/src/Scores/top10.txt";
 
 
 int main() {
@@ -924,26 +928,126 @@ void score( int player ) {
 	puck->vecVelocity[0] = 0.0;
 	puck->vecVelocity[2] = 0.0;
 
-	if( player == 1 )
+	if( player == 1 ) {
 		player1Score += 1;
+		std::cout << "Player 1 score: " << player1Score << std::endl;
+	}
 
-	if( player == 2 )
+	if( player == 2 ) {
 		player2Score += 1;
+		std::cout << "Player 2 score: " << player2Score << std::endl;
+	}
 
-	if( player1Score > 2 || player2Score > 2 )
-		gameOver();
+	if( player1Score > 2 ) {
+		std::cout << "Player 1 win!" << std::endl;
+		gameOver(0);
+	}
+
+	else if ( player2Score > 2 ) {
+		std::cout << "Player 2 win!" << std::endl;
+		gameOver(1);
+	}
+
 	else
 		glutTimerFunc( 2000 , nextPoint , 0 );
 
 	}
 
-void gameOver() {
+void gameOver(int index) {
 
 	//playing = false;
+
+	top10Check(index);
 
 	flyingStuff();
 
 	}
+
+void top10Check(int index) {
+	ifstream fin;
+	ofstream fout;
+	int num, spot = 0;
+	int player[10], win[10];
+
+
+	//read in file
+	fin.open(file.c_str());
+
+	if(fin.good()) {
+		fin >> num;
+
+
+
+		for(int i=0; i<num; i++)
+			fin >> player[i] >> win[i];
+	}
+	fin.close();
+
+	if(num != 10)
+		win[num-1] = -1;
+
+	//player1
+	if(!index) {
+		if( (player1Score - player2Score) > win[num-1]) {
+			//sort and insert
+			for(int i=0; i<num; i++) {
+				if((player1Score - player2Score) >= win[i]) {
+					spot = i;
+
+					for(int j = num-1; j > spot; j--) {
+						player[j] = player[j-1];
+						win[j] = win[j-1];
+					}
+
+					player[spot] = 1;
+					win[spot] = (player1Score - player2Score);
+					break;
+				}
+			}
+		}
+	}
+
+	//player2
+	else {
+		if( (player2Score - player1Score) > win[num-1]) {
+			// sort and insert
+			for(int i=0; i<num; i++) {
+				if((player2Score - player1Score) >= win[i]) {
+					spot = i;
+
+					for(int j = num-1; j > spot; j--) {
+						player[j] = player[j-1];
+						win[j] = win[j-1];
+					}
+
+					player[spot] = 2;
+					win[spot] = (player2Score - player1Score);
+					break;
+				}
+			}
+		}
+	}
+
+	if(num != 10)
+		num++;
+
+	//display top 10
+	cout << endl << "top 10 scoreboard" <<  endl;
+
+	for(int i=0; i< num; i++){
+		cout << "Player " << player[i] << " won by " << win[i] << " points." << endl;
+	}
+
+	//write to file
+	fout.open(file.c_str());
+
+	fout << num << endl;
+
+	for(int i=0; i<num; i++)
+		fout << player[i] << ' ' << win[i] << endl;
+
+	fout.close();
+}
 
 void nextPoint( int x ) {
 
