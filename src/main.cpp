@@ -57,6 +57,8 @@ void calculateBounce();
 
 void keyboardTimer( int x );
 
+void lightTimer(int);
+
 void specialUpHandler( int key , int x , int y );
 
 bool checkCollisions();
@@ -103,6 +105,8 @@ int prevX = -1 , prevY = -1;
 bool movingLeft = false , movingForward = false, movingBackwards = false, movingRight = false;
 
 bool paused = false, playing = false;
+
+bool addx = true;
 
 std::vector<Object*> objectList;
 
@@ -350,6 +354,8 @@ void initWindow() {
 
 	glutTimerFunc( 15 , physicsTimer , 0 );
 
+	glutTimerFunc( 15 , lightTimer , 0);
+
 	}
 
 void mouseMoveHandler(int x, int y) {
@@ -574,6 +580,22 @@ void keyboardTimer( int x ) {
 	glutTimerFunc( 30 , keyboardTimer , 0 );
 
 	}
+
+void lightTimer (int ignore ) {
+	//program1.light_position = point4( -5.0, 5.0, -5.0, 0.0 );
+
+	if (program1.light_position[0] <= -5.0)
+		addx = true;
+	else if(program1.light_position[0] >= 5.0)
+		addx = false;
+
+	if (addx)
+		program1.light_position[0] += 0.1;
+	else
+		program1.light_position[0] -= 0.1;
+
+	glutTimerFunc( 15 , lightTimer , 0 );
+}
 
 void readVertices( char* filename , Object* object ) {
 
